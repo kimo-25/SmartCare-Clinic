@@ -13,7 +13,7 @@ namespace SCMS.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     [Migration("20251209124005_first")]
-    partial class first
+    partial class First
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

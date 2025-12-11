@@ -5,7 +5,7 @@ namespace SCMS.BL.BLInterfaces
 {
     public interface IAppointmentService
     {
-        Appointment Create(Appointment slot);
+        Appointment? Create(Appointment slot);
         bool Update(Appointment slot);
         bool Delete(int appointmentId);
 

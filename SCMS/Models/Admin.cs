@@ -7,6 +7,7 @@ namespace SCMS.Models
     {
         [Key]
         public int AdminId { get; set; }
+
         [ForeignKey(nameof(StaffId))]
         public int StaffId { get; set; }
 
