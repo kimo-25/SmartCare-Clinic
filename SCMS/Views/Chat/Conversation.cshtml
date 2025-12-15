@@ -1,24 +1,24 @@
-﻿@model SCMS.ViewModels.Chat
+﻿@model SCMS.ViewModels.ChatConversationVm
 
 @{
     ViewData["Title"] = "Conversation";
 }
 
-<h2>Conversation with @Model.PatientName</h2>
+<h2>Conversation with @Model.AgentName</h2>
 
 <div style="border:1px solid #ccc; padding:10px; height:400px; overflow-y:scroll;">
     @foreach (var msg in Model.Messages)
     {
         <div style="margin-bottom:10px;">
-            <strong>@msg.SenderUser.FullName:</strong>
-            <span>@msg.MessageText</span>
-            <small style="color:gray;">(@msg.CreatedAt.ToString("g"))</small>
+            <strong>@msg.SenderName</strong>
+            <span>@msg.Text</span>
+            <small style="color:gray;">(@msg.SentAt.ToString("g"))</small>
         </div>
     }
 </div>
 
 <form asp-action="SendMessage" method="post">
-    <input type="hidden" name="ThreadId" value="@Model.ThreadId" />
+    <input type="hidden" name="ThreadId" value="@Model.ConversationId" />
     <textarea name="NewMessage" rows="3" style="width:100%;" placeholder="Type your message..."></textarea>
     <button type="submit" class="btn btn-primary" style="margin-top:5px;">Send</button>
 </form>

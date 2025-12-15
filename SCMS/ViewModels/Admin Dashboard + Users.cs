@@ -9,6 +9,7 @@ namespace SCMS.ViewModels
         public string FullName { get; set; } = null!;
         public string Email { get; set; } = null!;
         public string UserType { get; set; } = null!;
+        public string Phone { get; set; } = null!;
         public DateTime DateAdded { get; set; }
     }
 

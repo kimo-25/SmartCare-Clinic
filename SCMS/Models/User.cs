@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SCMS.Models
 {
@@ -21,11 +22,13 @@ namespace SCMS.Models
         public string PasswordHash { get; set; } = null!;
 
         [MaxLength(20)]
-        public string Phone { get; set; } = null!;
+        public string? Phone { get; set; }   // ✅ nullable عشان ميكسرش seeding
 
         public bool IsActive { get; set; } = true;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public string Role => GetType().Name;
+
+        [NotMapped]
+        public string Role => GetType().Name; // ✅ للعرض بس (مش للـ DB ولا للـ query)
     }
 }

@@ -12,8 +12,8 @@ using SCMS.Models;
 namespace SCMS.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251214010047_first")]
-    partial class first
+    [Migration("20251215143121_end")]
+    partial class end
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -459,7 +459,6 @@ namespace SCMS.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Phone")
-                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
