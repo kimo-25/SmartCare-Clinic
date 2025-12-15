@@ -12,23 +12,36 @@
             Create a new account to access the Smart Clinic System
         </p>
 
+        <!-- show all errors -->
+        <div asp-validation-summary="All" class="text-danger" style="margin-bottom:10px;"></div>
+
         <form asp-action="Register" method="post">
-            <label for="FullName">Full Name</label>
+            <label asp-for="FullName">Full Name</label>
             <input asp-for="FullName" placeholder="Enter your full name" required />
+            <span asp-validation-for="FullName" class="text-danger"></span>
 
-            <label for="Email">Email</label>
+            <label asp-for="Email">Email</label>
             <input asp-for="Email" type="email" placeholder="Enter your email" required />
+            <span asp-validation-for="Email" class="text-danger"></span>
 
-            <label for="Phone">Phone</label>
+            <label asp-for="Phone">Phone</label>
             <input asp-for="Phone" type="text" placeholder="Enter your phone number" required />
+            <span asp-validation-for="Phone" class="text-danger"></span>
 
-            <label for="Username">Username</label>
+            <label asp-for="Username">Username</label>
             <input asp-for="Username" placeholder="Choose a username" required />
+            <span asp-validation-for="Username" class="text-danger"></span>
 
-            <label for="Password">Password</label>
+            <label asp-for="Password">Password</label>
             <input asp-for="Password" type="password" placeholder="Enter a password" required />
+            <span asp-validation-for="Password" class="text-danger"></span>
 
-            <label for="UserType">User Type</label>
+            <!-- ✅ Confirm Password -->
+            <label asp-for="ConfirmPassword">Confirm Password</label>
+            <input asp-for="ConfirmPassword" type="password" placeholder="Confirm your password" required />
+            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+
+            <label asp-for="UserType">User Type</label>
             <select asp-for="UserType" required>
                 <option value="">-- Select User Type --</option>
                 <option value="Patient">Patient</option>
@@ -36,6 +49,7 @@
                 <option value="Receptionist">Receptionist</option>
                 <option value="Admin">Admin</option>
             </select>
+            <span asp-validation-for="UserType" class="text-danger"></span>
 
             <button type="submit" class="btn btn-primary" style="margin-top:20px;">Register</button>
         </form>
@@ -45,3 +59,7 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

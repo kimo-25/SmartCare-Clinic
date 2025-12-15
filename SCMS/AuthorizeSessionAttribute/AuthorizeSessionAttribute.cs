@@ -5,9 +5,9 @@ namespace SCMS.Filters
 {
     public class AuthorizeSessionAttribute : ActionFilterAttribute
     {
-        private readonly string _role; // اختياري، لو عايز تتحقق من Role معين
+        private readonly string? _role; // اختياري، لو عايز تتحقق من Role معين
 
-        public AuthorizeSessionAttribute(string role = null)
+        public AuthorizeSessionAttribute(string? role = null)
         {
             _role = role;
         }

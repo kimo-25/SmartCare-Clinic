@@ -71,7 +71,7 @@ namespace SCMS
                 var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
                 var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
 
-              
+
                 var adminExists = context.Users.OfType<Admin>()
                     .Any(a => a.Username == "admin" || a.Email == "admin@scms.com");
 

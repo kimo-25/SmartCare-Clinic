@@ -15,18 +15,27 @@ namespace SCMS.Controllers
         }
 
         // ------------------------
-        // Dashboard
-        public async Task<IActionResult> Dashboard(int? doctorId)
+        // helper: get doctor id from session
+        private int? GetDoctorIdFromSession()
         {
-            var id = doctorId ?? 0;
-            if (id == 0) return NotFound();
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrWhiteSpace(userIdStr)) return null;
+            return int.TryParse(userIdStr, out var id) ? id : null;
+        }
+
+        // ------------------------
+        // Dashboard
+        public async Task<IActionResult> Dashboard()
+        {
+            var id = GetDoctorIdFromSession();
+            if (id == null) return RedirectToAction("Login", "Account");
 
             var doctor = await _context.Set<Doctor>()
                 .Include(d => d.Feedbacks)
                 .Include(d => d.Appointments)
                     .ThenInclude(a => a.Bookings)
                     .ThenInclude(b => b.Patient)
-                .FirstOrDefaultAsync(d => d.UserId == id);
+                .FirstOrDefaultAsync(d => d.UserId == id.Value);
 
             if (doctor == null) return NotFound();
 
@@ -60,14 +69,14 @@ namespace SCMS.Controllers
 
         // ------------------------
         // 1️⃣ Appointments List
-        public async Task<IActionResult> Appointments(int? doctorId)
+        public async Task<IActionResult> Appointments()
         {
-            var id = doctorId ?? 0;
-            if (id == 0) return NotFound();
+            var id = GetDoctorIdFromSession();
+            if (id == null) return RedirectToAction("Login", "Account");
 
             var doctor = await _context.Set<Doctor>()
                 .Include(d => d.Appointments)
-                .FirstOrDefaultAsync(d => d.UserId == id);
+                .FirstOrDefaultAsync(d => d.UserId == id.Value);
 
             if (doctor == null) return NotFound();
 
@@ -96,8 +105,11 @@ namespace SCMS.Controllers
         // 2️⃣ Appointment Details
         public async Task<IActionResult> AppointmentDetails(int id)
         {
+            var doctorId = GetDoctorIdFromSession();
+            if (doctorId == null) return RedirectToAction("Login", "Account");
+
             var appointment = await _context.Appointments
-                .FirstOrDefaultAsync(a => a.AppointmentId == id);
+                .FirstOrDefaultAsync(a => a.AppointmentId == id && a.DoctorId == doctorId.Value);
 
             if (appointment == null) return NotFound();
 
@@ -120,19 +132,25 @@ namespace SCMS.Controllers
         [HttpGet]
         public IActionResult CreateAppointment()
         {
+            var doctorId = GetDoctorIdFromSession();
+            if (doctorId == null) return RedirectToAction("Login", "Account");
+
             return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateAppointment(DoctorAppointmentVm vm, int doctorId)
+        public async Task<IActionResult> CreateAppointment(DoctorAppointmentVm vm)
         {
+            var doctorId = GetDoctorIdFromSession();
+            if (doctorId == null) return RedirectToAction("Login", "Account");
+
             if (!ModelState.IsValid)
                 return View(vm);
 
             var appointment = new Appointment
             {
-                DoctorId = doctorId,
+                DoctorId = doctorId.Value,
                 AppointmentDate = vm.AppointmentDate,
                 StartTime = vm.StartTime,
                 EndTime = vm.EndTime,
@@ -144,16 +162,19 @@ namespace SCMS.Controllers
             _context.Appointments.Add(appointment);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("Appointments", new { doctorId });
+            return RedirectToAction("Appointments");
         }
 
         // ------------------------
         // 4️⃣ Create Prescription
         [HttpGet]
-        public IActionResult CreatePrescription(int patientId, int doctorId)
+        public IActionResult CreatePrescription(int patientId)
         {
+            var doctorId = GetDoctorIdFromSession();
+            if (doctorId == null) return RedirectToAction("Login", "Account");
+
             ViewBag.PatientId = patientId;
-            ViewBag.DoctorId = doctorId;
+            ViewBag.DoctorId = doctorId.Value;
             return View();
         }
 
@@ -161,25 +182,33 @@ namespace SCMS.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreatePrescription(Prescription vm)
         {
+            var doctorId = GetDoctorIdFromSession();
+            if (doctorId == null) return RedirectToAction("Login", "Account");
+
             if (!ModelState.IsValid)
                 return View(vm);
 
+            // enforce doctor id from session (prevent tampering)
+            vm.DoctorId = doctorId.Value;
             vm.CreatedAt = DateTime.UtcNow;
 
             _context.Prescriptions.Add(vm);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("Dashboard", new { doctorId = vm.DoctorId });
+            return RedirectToAction("Dashboard");
         }
 
         // ------------------------
         // 5️⃣ Medical Records - List
-        public async Task<IActionResult> MedicalRecords(int doctorId)
+        public async Task<IActionResult> MedicalRecords()
         {
+            var doctorId = GetDoctorIdFromSession();
+            if (doctorId == null) return RedirectToAction("Login", "Account");
+
             var records = await _context.MedicalRecords
                 .Include(r => r.Patient)
                 .Include(r => r.RelatedPrescription)
-                .Where(r => r.RelatedPrescription == null || r.RelatedPrescription.DoctorId == doctorId)
+                .Where(r => r.RelatedPrescription == null || r.RelatedPrescription.DoctorId == doctorId.Value)
                 .ToListAsync();
 
             return View(records);
@@ -189,6 +218,9 @@ namespace SCMS.Controllers
         // 6️⃣ Medical Record Details
         public async Task<IActionResult> DetailsMedicalRecord(int id)
         {
+            var doctorId = GetDoctorIdFromSession();
+            if (doctorId == null) return RedirectToAction("Login", "Account");
+
             var record = await _context.MedicalRecords
                 .Include(r => r.Patient)
                 .Include(r => r.RelatedPrescription)
@@ -196,6 +228,10 @@ namespace SCMS.Controllers
                 .FirstOrDefaultAsync(r => r.RecordId == id);
 
             if (record == null) return NotFound();
+
+            // optional: ensure this record belongs to this doctor if it has prescription
+            if (record.RelatedPrescription != null && record.RelatedPrescription.DoctorId != doctorId.Value)
+                return Forbid();
 
             return View(record);
         }
@@ -205,10 +241,17 @@ namespace SCMS.Controllers
         [HttpGet]
         public async Task<IActionResult> EditMedicalRecord(int id)
         {
+            var doctorId = GetDoctorIdFromSession();
+            if (doctorId == null) return RedirectToAction("Login", "Account");
+
             var record = await _context.MedicalRecords
+                .Include(r => r.RelatedPrescription)
                 .FirstOrDefaultAsync(r => r.RecordId == id);
 
             if (record == null) return NotFound();
+
+            if (record.RelatedPrescription != null && record.RelatedPrescription.DoctorId != doctorId.Value)
+                return Forbid();
 
             return View(record);
         }
@@ -217,47 +260,51 @@ namespace SCMS.Controllers
         // 8️⃣ Edit Medical Record - POST
         [HttpPost]
         [ValidateAntiForgeryToken]
-        // ------------------------
-        // 8️⃣ Edit Medical Record - POST
         public async Task<IActionResult> EditMedicalRecord(MedicalRecord vm)
         {
+            var doctorId = GetDoctorIdFromSession();
+            if (doctorId == null) return RedirectToAction("Login", "Account");
+
             if (!ModelState.IsValid)
                 return View(vm);
 
             var record = await _context.MedicalRecords
+                .Include(r => r.RelatedPrescription)
                 .FirstOrDefaultAsync(r => r.RecordId == vm.RecordId);
 
             if (record == null) return NotFound();
 
+            if (record.RelatedPrescription != null && record.RelatedPrescription.DoctorId != doctorId.Value)
+                return Forbid();
+
             record.Description = vm.Description;
-            record.PrescriptionId = vm.PrescriptionId;       // << تعديل هنا
+            record.PrescriptionId = vm.PrescriptionId;
             record.RadiologyResultId = vm.RadiologyResultId;
 
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("MedicalRecords", new { doctorId = record.RelatedPrescription?.DoctorId ?? 0 });
+            return RedirectToAction("MedicalRecords");
         }
-        // ------------------------
-        // Patient File
+
         // ------------------------
         // Patient File
         public async Task<IActionResult> PatientFile(int patientId)
         {
-            // جلب بيانات المريض
+            var doctorId = GetDoctorIdFromSession();
+            if (doctorId == null) return RedirectToAction("Login", "Account");
+
             var patient = await _context.Patients
-                .FirstOrDefaultAsync(p => p.UserId == patientId); // << استخدم UserId هنا
+                .FirstOrDefaultAsync(p => p.UserId == patientId);
 
             if (patient == null) return NotFound();
 
-            // جلب السجلات الطبية المرتبطة بالمريض مع الوصفات ونتائج الأشعة
             var records = await _context.MedicalRecords
                 .Include(r => r.RelatedPrescription)
                 .Include(r => r.RadiologyResult)
-                .Where(r => r.PatientId == patient.UserId) // << هنا كمان UserId
+                .Where(r => r.PatientId == patient.UserId)
                 .OrderByDescending(r => r.RecordDate)
                 .ToListAsync();
 
-            // تحويل البيانات إلى ViewModel
             var vm = new PatientProfileVm
             {
                 PatientId = patient.UserId,
@@ -278,11 +325,7 @@ namespace SCMS.Controllers
                 }).ToList()
             };
 
-            return View(vm); // PatientFile.cshtml
+            return View(vm);
         }
-
-
-
-
     }
 }

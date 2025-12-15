@@ -4,6 +4,7 @@ using SCMS.Models;
 using SCMS.ViewModels;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using Microsoft.AspNetCore.Http;
 
 namespace SCMS.Controllers
 {
@@ -37,17 +38,43 @@ namespace SCMS.Controllers
 
             string passwordHash = HashPassword(vm.Password);
 
-            // Create user based on type
+            // ✅ Create user based on type + fill required fields (TPH NOT NULL columns)
             SCMS.Models.User user = vm.UserType switch
             {
-                "Patient" => new Patient(),
-                "Doctor" => new Doctor(),
-                "Receptionist" => new Receptionist(),
-                "Admin" => new Admin(),
+                "Patient" => new Patient
+                {
+                    Gender = "Unknown",
+                    Address = "N/A",
+                    DateOfBirth = DateTime.Today,
+                    Age = 0
+                },
+
+                "Doctor" => new Doctor
+                {
+                    DepartmentName = "General",
+                    PhoneNumber = vm.Phone,       // مهم جداً لأن Staff.PhoneNumber Required
+                    Specialization = "General",   // مهم جداً لأن Doctor.Specialization Required
+                    YearsOfExperience = 0,
+                    Salary = 0
+                },
+
+                "Receptionist" => new Receptionist
+                {
+                    DepartmentName = "Reception",
+                    PhoneNumber = vm.Phone,
+                    Shift = "Morning",
+                    Salary = 0
+                },
+
+                "Admin" => new Admin
+                {
+                    AccessLevel = "Full"
+                },
+
                 _ => new SCMS.Models.User()
             };
 
-
+            // Common fields
             user.FullName = vm.FullName;
             user.Email = vm.Email;
             user.Phone = vm.Phone;
@@ -55,8 +82,16 @@ namespace SCMS.Controllers
             user.PasswordHash = passwordHash;
             user.IsActive = true;
 
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                ModelState.AddModelError("", ex.InnerException?.Message ?? ex.Message);
+                return View(vm);
+            }
 
             return RedirectToAction(nameof(Login));
         }
@@ -186,7 +221,6 @@ namespace SCMS.Controllers
                 return View();
             }
 
-            // Redirect directly to ResetPassword for simplicity
             return RedirectToAction("ResetPassword", new { userId = user.UserId });
         }
 

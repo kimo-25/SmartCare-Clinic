@@ -75,8 +75,9 @@ namespace SCMS.BL.BLClasses
         {
             return _context.MedicalRecords
                 .Include(r => r.RelatedPrescription)
-                .Include(r => r.RadiologyResult)
-                    .ThenInclude(rr => rr.Request)
+                .Include(r => r.RadiologyResult!)
+                    .ThenInclude(rr => rr.Request!)
+
                 .FirstOrDefault(r => r.RecordId == recordId);
         }
 
@@ -85,10 +86,12 @@ namespace SCMS.BL.BLClasses
             return _context.MedicalRecords
                 .Where(r => r.PatientId == patientId)
                 .Include(r => r.RelatedPrescription)
-                .Include(r => r.RadiologyResult)
-                    .ThenInclude(rr => rr.Request)
+                .Include(r => r.RadiologyResult!)
+                    .ThenInclude(rr => rr.Request!)
+
                 .OrderByDescending(r => r.RecordDate)
                 .ToList();
         }
+
     }
 }
