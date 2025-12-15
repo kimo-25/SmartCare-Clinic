@@ -1,5 +1,51 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model SCMS.ViewModels.RadiologyResultFormVm
+@section Styles {
+    <link rel="stylesheet" href="~/css/clinic.css" />
+}
+
 @{
+    ViewData["Title"] = "Create Radiology Result";
+}
+
+<h2>Create Radiology Result</h2>
+
+<form asp-action="CreateResult" method="post">
+    @Html.AntiForgeryToken()
+
+    <!-- Hidden Fields -->
+    <input type="hidden" asp-for="RequestId" />
+    <input type="hidden" asp-for="RadiologistId" />
+
+    <!-- Image Path -->
+    <div class="mb-3">
+        <label asp-for="ImagePath" class="form-label"></label>
+        <input asp-for="ImagePath" class="form-control" placeholder="e.g. /images/xray1.png" />
+        <span asp-validation-for="ImagePath" class="text-danger"></span>
+    </div>
+
+    <!-- Report -->
+    <div class="mb-3">
+        <label asp-for="Report" class="form-label"></label>
+        <textarea asp-for="Report"
+                  rows="5"
+                  class="form-control"
+                  placeholder="Write radiology report here..."></textarea>
+        <span asp-validation-for="Report" class="text-danger"></span>
+    </div>
+
+    <!-- Status (Hidden - default Completed) -->
+    <input type="hidden" asp-for="Status" />
+
+    <!-- Actions -->
+    <button type="submit" class="btn btn-success">
+        Save Result
+    </button>
+
+    <a asp-action="Requests" class="btn btn-secondary ms-2">
+        Back
+    </a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
 }

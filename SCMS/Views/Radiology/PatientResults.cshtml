@@ -1,5 +1,47 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model IEnumerable<SCMS.Models.RadiologyResult>
+@section Styles {
+    <link rel="stylesheet" href="~/css/clinic.css" />
+}
+
 @{
+    ViewData["Title"] = "Patient Radiology Results";
+}
+
+<h2>Patient Radiology Results</h2>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No radiology results found for this patient.
+    </div>
+}
+else
+{
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Test Name</th>
+                <th>Result Date</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+@foreach (var result in Model)
+{
+            <tr>
+                <td>@result.Request?.TestName</td>
+                <td>@result.ResultDate.ToShortDateString()</td>
+                <td>@result.Status</td>
+                <td>
+                    <a asp-action="ResultDetails"
+                       asp-route-id="@result.ResultId"
+                       class="btn btn-sm btn-primary">
+                        View Result
+                    </a>
+                </td>
+            </tr>
+}
+        </tbody>
+    </table>
 }

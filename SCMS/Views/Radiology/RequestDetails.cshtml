@@ -1,5 +1,60 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
+﻿@model SCMS.Models.RadiologyRequest
+@section Styles {
+    <link rel="stylesheet" href="~/css/clinic.css" />
 }
+
+@{
+    ViewData["Title"] = "Radiology Request Details";
+}
+
+<h2>Radiology Request Details</h2>
+
+<table class="table table-bordered">
+    <tr>
+        <th>Patient Name</th>
+        <td>@Model.Patient?.FullName</td>
+    </tr>
+    <tr>
+        <th>Doctor Name</th>
+        <td>@Model.Doctor?.FullName</td>
+    </tr>
+    <tr>
+        <th>Radiology Test</th>
+        <td>@Model.TestName</td>
+    </tr>
+    <tr>
+        <th>Status</th>
+        <td>@Model.Status</td>
+    </tr>
+    <tr>
+        <th>Request Date</th>
+        <td>@Model.RequestDate.ToString("dd/MM/yyyy")</td>
+    </tr>
+    <tr>
+        <th>Clinical Notes</th>
+        <td>@Model.ClinicalNotes ?? "No notes provided"</td>
+    </tr>
+</table>
+
+<hr />
+
+@if (Model.Result == null)
+{
+    <a asp-action="CreateResult"
+       asp-route-requestId="@Model.RequestId"
+       class="btn btn-success">
+        Create Result
+    </a>
+}
+else
+{
+    <a asp-action="ResultDetails"
+       asp-route-id="@Model.Result.ResultId"
+       class="btn btn-primary">
+        View Result
+    </a>
+}
+
+<a asp-action="Requests" class="btn btn-secondary ms-2">
+    Back to Requests
+</a>

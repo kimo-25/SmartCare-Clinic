@@ -1,5 +1,44 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
+﻿@model SCMS.ViewModels.RadiologyRequestListVm
+@section Styles {
+    <link rel="stylesheet" href="~/css/clinic.css" />
 }
+
+@{
+    ViewData["Title"] = "Radiology Requests";
+}
+
+<h2>Radiology Requests</h2>
+
+<table class="table table-bordered table-striped">
+    <thead class="table-light">
+        <tr>
+            <th>Patient Name</th>
+            <th>Age</th>
+            <th>Phone</th>
+            <th>Test</th>
+            <th>Status</th>
+            <th>Request Date</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var req in Model.Requests)
+{
+        <tr>
+            <td>@req.PatientName</td>
+            <td>@req.Age</td>
+            <td>@req.Phone</td>
+            <td>@req.TestName</td>
+            <td>@req.Status</td>
+            <td>@req.RequestDate.ToString("dd/MM/yyyy")</td>
+            <td>
+                <a asp-action="RequestDetails"
+                   asp-route-id="@req.RequestId"
+                   class="btn btn-sm btn-primary">
+                    Details
+                </a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
