@@ -1,5 +1,59 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model SCMS.ViewModels.RadiologyRequestListVm
+
 @{
+    ViewData["Title"] = "Radiology Requests";
 }
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Radiology Requests 🧪</h2>
+
+    <div class="card">
+        <div class="card-header bg-dark text-white">
+            Requests List
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Patient</th>
+                        <th>Age</th>
+                        <th>Phone</th>
+                        <th>Test Name</th>
+                        <th>Request Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Requests.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">
+                                No radiology requests found.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var r in Model.Requests)
+                        {
+                            <tr>
+                                <td>@r.PatientName</td>
+                                <td>@r.Age</td>
+                                <td>@r.Phone</td>
+                                <td>@r.TestName</td>
+                                <td>@r.RequestDate.ToShortDateString()</td>
+                                <td>
+                                    <span class="badge @(r.Status == "Completed" ? "bg-success" : r.Status == "Pending" ? "bg-warning text-dark" : "bg-info")">
+                                        @r.Status
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>

@@ -1,5 +1,109 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model SCMS.ViewModels.ReceptionDashboardVm
+
 @{
+    ViewData["Title"] = "Reception Dashboard";
 }
+
+<div class="container mt-4">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Welcome, @Model.ReceptionistName 👋</h2>
+        <span class="badge bg-primary fs-6">
+            Today's Appointments: @Model.TodaysAppointmentsCount
+        </span>
+    </div>
+
+    <!-- Today's Appointments -->
+    <div class="card mb-4">
+        <div class="card-header bg-dark text-white">
+            Today's Appointments
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-striped mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Doctor</th>
+                        <th>Patient</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.TodaysAppointments.Any())
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">
+                                No appointments today
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var item in Model.TodaysAppointments)
+                        {
+                            <tr>
+                                <td>@item.AppointmentDate.ToShortDateString()</td>
+                                <td>@item.StartTime</td>
+                                <td>@item.DoctorName</td>
+                                <td>@item.PatientName</td>
+                                <td>
+                                    <span class="badge bg-info">
+                                        @item.Status
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Recent Patients -->
+    <div class="card">
+        <div class="card-header bg-secondary text-white">
+            Recently Added Patients
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Age</th>
+                        <th>Phone</th>
+                        <th>Last Visit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.RecentPatients.Any())
+                    {
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">
+                                No recent patients
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var p in Model.RecentPatients)
+                        {
+                            <tr>
+                                <td>@p.FullName</td>
+                                <td>@p.Age</td>
+                                <td>@p.Phone</td>
+                                <td>
+                                    @(p.LastVisit.HasValue 
+                                        ? p.LastVisit.Value.ToShortDateString() 
+                                        : "-")
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>

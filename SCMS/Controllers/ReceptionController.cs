@@ -26,6 +26,7 @@ namespace SCMS.Controllers
             return t.HasValue ? (UserType)t.Value : UserType.User;
         }
 
+        // =================== Dashboard ===================
         public async Task<IActionResult> Dashboard()
         {
             var userId = CurrentUserId();
@@ -78,6 +79,7 @@ namespace SCMS.Controllers
             return View(vm);
         }
 
+        // =================== Patients List ===================
         public async Task<IActionResult> Patients(int page = 1, string? searchTerm = null)
         {
             const int pageSize = 10;
@@ -119,6 +121,87 @@ namespace SCMS.Controllers
             return View(vm);
         }
 
+        // =================== Edit / Add Patient ===================
+        public async Task<IActionResult> EditPatient(int? id)
+        {
+            if (id == null)
+                return View(new PatientFormVm());
+
+            var patient = await _context.Patients.FindAsync(id);
+            if (patient == null) return NotFound();
+
+            var vm = new PatientFormVm
+            {
+                PatientId = patient.UserId,
+                FullName = patient.FullName,
+                Phone = patient.Phone,
+                Email = patient.Email,
+                Gender = patient.Gender,
+                DateOfBirth = patient.DateOfBirth,
+                Address = patient.Address,
+                MedicalHistorySummary = patient.MedicalHistorySummary
+            };
+
+            return View(vm);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SavePatient(PatientFormVm model)
+        {
+            if (!ModelState.IsValid)
+                return View("EditPatient", model);
+
+            if (model.PatientId.HasValue)
+            {
+                // Edit existing
+                var patient = await _context.Patients.FindAsync(model.PatientId.Value);
+                if (patient == null) return NotFound();
+
+                patient.FullName = model.FullName;
+                patient.Phone = model.Phone;
+                patient.Email = model.Email;
+                patient.Gender = model.Gender;
+                patient.DateOfBirth = model.DateOfBirth;
+                patient.Address = model.Address;
+                patient.MedicalHistorySummary = model.MedicalHistorySummary;
+
+                _context.Update(patient);
+            }
+            else
+            {
+                // Add new
+                var patient = new Patient
+                {
+                    FullName = model.FullName,
+                    Phone = model.Phone,
+                    Email = model.Email,
+                    Gender = model.Gender,
+                    DateOfBirth = model.DateOfBirth,
+                    Address = model.Address,
+                    MedicalHistorySummary = model.MedicalHistorySummary,
+                    CreatedAt = DateTime.Now
+                };
+                _context.Add(patient);
+            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction("Patients");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeletePatient(int id)
+        {
+            var patient = await _context.Patients.FindAsync(id);
+            if (patient == null) return NotFound();
+
+            _context.Patients.Remove(patient);
+            await _context.SaveChangesAsync();
+            return RedirectToAction("Patients");
+        }
+
+        // =================== Patient Details ===================
         public async Task<IActionResult> PatientDetails(int id)
         {
             var patient = await _context.Set<Patient>()
@@ -169,6 +252,7 @@ namespace SCMS.Controllers
             return View(profile);
         }
 
+        // =================== Appointments ===================
         public async Task<IActionResult> Appointments()
         {
             var appointments = await _context.Appointments
@@ -191,6 +275,7 @@ namespace SCMS.Controllers
             return View(vm);
         }
 
+        // =================== Radiology Requests ===================
         public async Task<IActionResult> RadiologyRequests()
         {
             var requests = await _context.RadiologyRequests
@@ -216,6 +301,8 @@ namespace SCMS.Controllers
             return View(vm);
         }
 
+        // =================== Radiology Request Details ===================
+        // =================== Radiology Request Details ===================
         public async Task<IActionResult> RadiologyRequestDetails(int id)
         {
             var request = await _context.RadiologyRequests
@@ -225,6 +312,12 @@ namespace SCMS.Controllers
                 .FirstOrDefaultAsync(r => r.RequestId == id);
 
             if (request == null) return NotFound();
+
+            // تأكد من Result ولو null نعمله object فارغ لتجنب NullReference
+            if (request.Result == null)
+            {
+                request.Result = new RadiologyResult();
+            }
 
             return View(request);
         }

@@ -54,6 +54,7 @@ namespace SCMS.Controllers
                     UserId = u.UserId,
                     FullName = u.FullName,
                     Email = u.Email,
+                    Phone = u.Phone,
                     UserType = EF.Property<string>(u, "Discriminator"),
                     DateAdded = u.CreatedAt
                 })
@@ -62,15 +63,7 @@ namespace SCMS.Controllers
             return View(users);
         }
 
-        // ================= Activity Log =================
-        public async Task<IActionResult> ActivityLog()
-        {
-            var logs = await _context.ActivityLog
-                                     .OrderByDescending(l => l.DateTime)
-                                     .ToListAsync();
-
-            return View(logs);
-        }
+       
 
         // ================= Appointments Overview =================
         public async Task<IActionResult> AppointmentsOverview()
@@ -89,11 +82,11 @@ namespace SCMS.Controllers
         [HttpGet]
         public IActionResult CreateUser()
         {
-            return View(new CreateUserVm());
+            return View(new RegisterVm());
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateUser(CreateUserVm vm)
+        public async Task<IActionResult> CreateUser(RegisterVm vm)
         {
             if (!ModelState.IsValid)
                 return View(vm);

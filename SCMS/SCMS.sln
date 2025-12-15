@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SCMS", "SCMS.csproj", "{D24CF365-98CD-D7DB-45E5-C95E3AB3CDDC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D24CF365-98CD-D7DB-45E5-C95E3AB3CDDC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D24CF365-98CD-D7DB-45E5-C95E3AB3CDDC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D24CF365-98CD-D7DB-45E5-C95E3AB3CDDC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D24CF365-98CD-D7DB-45E5-C95E3AB3CDDC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {51AD51B4-FE41-4A18-9594-6B75B0B34D88}
+	EndGlobalSection
+EndGlobal

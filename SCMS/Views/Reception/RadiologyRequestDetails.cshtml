@@ -1,5 +1,37 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
+﻿@model SCMS.Models.RadiologyRequest
+
+<div class="container mt-4">
+    <h2 class="mb-4">Radiology Request Details 🔬</h2>
+
+    <div class="card mb-4">
+        <div class="card-header bg-dark text-white">Request Info</div>
+        <div class="card-body">
+            <p><strong>Patient:</strong> @Model.Patient?.FullName ?? "-" </p>
+            <p><strong>Age:</strong> @Model.Patient?.Age ?? 0 </p>
+            <p><strong>Phone:</strong> @Model.Patient?.Phone ?? "-" </p>
+            <p><strong>Doctor:</strong> @Model.Doctor?.FullName ?? "-" </p>
+            <p><strong>Test Name:</strong> @Model.TestName</p>
+            <p><strong>Request Date:</strong> @Model.RequestDate.ToShortDateString()</p>
+            <p>
+                <strong>Status:</strong>
+                <span class="badge @(Model.Status == "Completed" ? "bg-success" : Model.Status == "Pending" ? "bg-warning text-dark" : "bg-info")">
+                    @Model.Status
+                </span>
+            </p>
+
+            @if (!string.IsNullOrEmpty(Model.Result?.Report))
+            {
+                <hr />
+                <h5>Result</h5>
+                <p><strong>Result Date:</strong> @(Model.Result?.ResultDate.ToShortDateString() ?? "-")</p>
+                <p><strong>Notes:</strong> @Model.Result?.Report</p>
+            }
+            else
+            {
+                <p class="text-muted">No result available yet.</p>
+            }
+        </div>
+    </div>
+
+    <a asp-action="RadiologyRequests" class="btn btn-secondary">Back to Requests</a>
+</div>

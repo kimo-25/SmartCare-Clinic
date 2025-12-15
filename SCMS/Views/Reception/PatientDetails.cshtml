@@ -1,5 +1,97 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model SCMS.ViewModels.PatientProfileVm
+
 @{
+    ViewData["Title"] = "Patient Details";
+    var header = ViewBag.PatientHeader as SCMS.ViewModels.PatientHeaderVm;
 }
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Patient Profile 🩺</h2>
+
+    <!-- Header Card -->
+    <div class="card mb-4">
+        <div class="card-header bg-dark text-white">
+            Patient Information
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <strong>Name:</strong> @header.FullName
+                </div>
+                <div class="col-md-3 mb-2">
+                    <strong>Age:</strong> @header.Age
+                </div>
+                <div class="col-md-3 mb-2">
+                    <strong>DOB:</strong> @header.DateOfBirth.ToShortDateString()
+                </div>
+                <div class="col-md-6 mb-2">
+                    <strong>Phone:</strong> @header.Phone
+                </div>
+                <div class="col-md-6 mb-2">
+                    <strong>Address:</strong> @header.Address
+                </div>
+                <div class="col-md-12 mb-2">
+                    <strong>Allergies / Medical Summary:</strong> @header.Allergies ?? "-"
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Medical Records -->
+    <div class="card">
+        <div class="card-header bg-secondary text-white">
+            Medical Records
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Diagnosis</th>
+                        <th>Treatment</th>
+                        <th>Radiology Test</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Records.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">
+                                No medical records found.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var r in Model.Records)
+                        {
+                            <tr>
+                                <td>@r.RecordDate.ToShortDateString()</td>
+                                <td>@r.Description</td>
+                                <td>@r.Diagnosis ?? "-"</td>
+                                <td>@r.Treatment ?? "-"</td>
+                                <td>@r.RadiologyTestName ?? "-"</td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(r.RadiologyStatus))
+                                    {
+                                        <span class="badge @(r.RadiologyStatus == "Completed" ? "bg-success" : r.RadiologyStatus == "Pending" ? "bg-warning text-dark" : "bg-info")">
+                                            @r.RadiologyStatus
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">N/A</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>

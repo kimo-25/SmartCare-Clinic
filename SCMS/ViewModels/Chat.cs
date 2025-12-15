@@ -8,7 +8,7 @@ namespace SCMS.ViewModels
         public int MessageId { get; set; }
         public string SenderName { get; set; } = null!;
         public bool IsFromCurrentUser { get; set; }
-        public string Text { get; set; } = null!
+        public string Text { get; set; } = null!;
         public DateTime SentAt { get; set; }
     }
 
