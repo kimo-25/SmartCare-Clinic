@@ -1,5 +1,83 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model SCMS.ViewModels.DoctorProfileVm
+
 @{
+    ViewData["Title"] = "My Appointments";
 }
+
+<!-- Unified Clinic CSS -->
+<link rel="stylesheet" href="~/css/clinic.css" />
+
+<div class="container appointments-page">
+
+    <h2 class="page-title">My Appointments</h2>
+
+    @if (!Model.UpcomingAppointments.Any())
+    {
+        <div class="empty-state">
+            <p>No upcoming appointments.</p>
+        </div>
+    }
+    else
+    {
+        <table class="appointments-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Capacity</th>
+                    <th>Booked</th>
+                    <th>Remaining</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.UpcomingAppointments)
+                {
+                    <tr>
+                        <td>
+                            @item.AppointmentDate.ToString("dd MMM yyyy")
+                        </td>
+
+                        <td>
+                            @item.StartTime.ToString(@"hh\:mm")
+                            -
+                            @item.EndTime.ToString(@"hh\:mm")
+                        </td>
+
+                        <td>@item.Capacity</td>
+
+                        <td>@item.CurrentCount</td>
+
+                        <td>@item.RemainingSlots</td>
+
+                        <td>
+                            <span class="status-text">
+                                @item.Status
+                            </span>
+                        </td>
+
+                        <td>
+                            <a asp-action="AppointmentDetails"
+                               asp-controller="Doctor"
+                               asp-route-id="@item.AppointmentId"
+                               class="btn primary-btn">
+                                Details
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    <div class="actions">
+        <a asp-action="Dashboard"
+           asp-controller="Doctor"
+           asp-route-doctorId="@Model.DoctorId"
+           class="btn secondary-btn">
+            Back to Dashboard
+        </a>
+    </div>
+
+</div>

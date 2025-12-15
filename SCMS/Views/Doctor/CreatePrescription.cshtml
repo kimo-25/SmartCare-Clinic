@@ -1,5 +1,49 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
+﻿@{
+    ViewData["Title"] = "Create Prescription";
 }
+
+<!-- Unified Clinic CSS -->
+<link rel="stylesheet" href="~/css/clinic.css" />
+
+<div class="container create-prescription-page">
+
+    <h2 class="page-title">Create Prescription</h2>
+
+    <form asp-action="CreatePrescription"
+          asp-controller="Doctor"
+          method="post"
+          class="form-card">
+
+        <div class="form-group">
+            <label for="PatientName">Patient Name</label>
+            <input type="text" id="PatientName" name="PatientName" class="form-control" required />
+        </div>
+
+        <div class="form-group">
+            <label for="AppointmentDate">Appointment Date</label>
+            <input type="date" id="AppointmentDate" name="AppointmentDate" class="form-control" required />
+        </div>
+
+        <div class="form-group">
+            <label for="Diagnosis">Diagnosis</label>
+            <textarea id="Diagnosis" name="Diagnosis" rows="3" class="form-control" required></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="Medications">Medications</label>
+            <textarea id="Medications" name="Medications" rows="4" class="form-control" placeholder="Medicine name, dosage, instructions" required></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="Notes">Additional Notes</label>
+            <textarea id="Notes" name="Notes" rows="2" class="form-control"></textarea>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn primary-btn">Save Prescription</button>
+            <a asp-action="Dashboard" asp-controller="Doctor" class="btn secondary-btn">Cancel</a>
+        </div>
+
+    </form>
+
+</div>

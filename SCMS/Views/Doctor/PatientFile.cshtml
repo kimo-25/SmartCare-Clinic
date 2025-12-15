@@ -1,5 +1,58 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model SCMS.ViewModels.PatientProfileVm
+
 @{
+    ViewData["Title"] = "Patient File";
 }
+
+<link rel="stylesheet" href="~/css/clinic.css" />
+
+<div class="container patient-file-page">
+    <h2 class="page-title">Patient File: @Model.FullName</h2>
+
+    <h3>📌 Personal Info</h3>
+    <ul>
+        <li>Full Name: @Model.FullName</li>
+        <li>Age: @Model.Age</li>
+        <li>Gender: @Model.Gender</li>
+        <li>Address: @Model.Address</li>
+        <li>Medical History Summary: @Model.MedicalHistorySummary</li>
+    </ul>
+
+    <h3>📂 Medical Records</h3>
+    @if (Model.Records.Any())
+    {
+        <table class="records-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Diagnosis</th>
+                    <th>Treatment</th>
+                    <th>Radiology Test</th>
+                    <th>Radiology Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var record in Model.Records)
+                {
+                    <tr>
+                        <td>@record.RecordDate.ToString("dd MMM yyyy")</td>
+                        <td>@record.Description</td>
+                        <td>@record.Diagnosis ?? "-" </td>
+                        <td>@record.Treatment ?? "-" </td>
+                        <td>@record.RadiologyTestName ?? "-" </td>
+                        <td>@record.RadiologyStatus ?? "-" </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>No medical records found.</p>
+    }
+
+    <div class="actions">
+        <a asp-action="Dashboard" class="btn secondary-btn">Back to Dashboard</a>
+    </div>
+</div>

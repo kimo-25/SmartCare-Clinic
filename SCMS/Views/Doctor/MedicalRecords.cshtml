@@ -1,5 +1,56 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model IEnumerable<SCMS.Models.MedicalRecord>
+
 @{
+    ViewData["Title"] = "Medical Records";
 }
+
+<!-- Unified Clinic CSS -->
+<link rel="stylesheet" href="~/css/clinic.css" />
+
+<div class="container medical-records-page">
+
+    <h2 class="page-title">Medical Records</h2>
+
+    @if (!Model.Any())
+    {
+        <p>No medical records available.</p>
+    }
+    else
+    {
+        <table class="records-table">
+            <thead>
+                <tr>
+                    <th>Patient Name</th>
+                    <th>Date</th>
+                    <th>Diagnosis</th>
+                    <th>Treatment</th>
+                    <th>Doctor</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+              
+
+@foreach (var record in Model)
+{
+    <tr>
+        <td>@record.Patient.FullName</td> <!-- تأكد Patient عنده FullName -->
+        <td>@record.RecordDate.ToString("dd MMM yyyy")</td> <!-- بدل DateCreated -->
+        <td>@record.Description</td> <!-- بدل Diagnosis -->
+        <td>@(record.RelatedPrescription?.Treatment ?? "-")</td> <!-- بدل Treatment -->
+        <td>
+            <a asp-action="DetailsMedicalRecord" asp-route-id="@record.RecordId" class="btn primary-btn">Details</a>
+            <a asp-action="EditMedicalRecord" asp-route-id="@record.RecordId" class="btn secondary-btn">Edit</a>
+        </td>
+    </tr>
+}
+
+            </tbody>
+        </table>
+    }
+
+    <div class="actions">
+        <a asp-action="Dashboard" asp-controller="Doctor" class="btn secondary-btn">Back to Dashboard</a>
+    </div>
+
+</div>

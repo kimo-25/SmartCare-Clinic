@@ -1,5 +1,61 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model SCMS.ViewModels.DoctorAppointmentVm
+
 @{
+    ViewData["Title"] = "Create Appointment";
 }
+
+<!-- Unified Clinic CSS -->
+<link rel="stylesheet" href="~/css/clinic.css" />
+
+<div class="container create-appointment-page">
+
+    <h2 class="page-title">Create New Appointment</h2>
+
+    <form asp-action="CreateAppointment"
+          asp-controller="Doctor"
+          method="post"
+          class="form-card">
+
+        <div class="form-group">
+            <label asp-for="AppointmentDate">Appointment Date</label>
+            <input asp-for="AppointmentDate" type="date" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            <label asp-for="StartTime">Start Time</label>
+            <input asp-for="StartTime" type="time" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            <label asp-for="EndTime">End Time</label>
+            <input asp-for="EndTime" type="time" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Capacity">Capacity</label>
+            <input asp-for="Capacity" type="number" min="1" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Status">Status</label>
+            <select asp-for="Status" class="form-control">
+                <option value="Available">Available</option>
+                <option value="Closed">Closed</option>
+            </select>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn primary-btn">
+                Create Appointment
+            </button>
+
+            <a asp-action="Dashboard"
+               asp-controller="Doctor"
+               class="btn secondary-btn">
+                Cancel
+            </a>
+        </div>
+
+    </form>
+
+</div>

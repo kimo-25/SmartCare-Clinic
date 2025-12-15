@@ -1,5 +1,69 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model SCMS.ViewModels.DoctorProfileVm
+
 @{
+    ViewData["Title"] = "Doctor Dashboard";
 }
+
+<!-- Unified Clinic CSS -->
+<link rel="stylesheet" href="~/css/clinic.css" />
+
+<div class="container doctor-dashboard">
+
+    <h1 class="page-title">Welcome, @Model.FullName</h1>
+
+    <div class="doctor-info-card">
+        <p><strong>Specialization:</strong> @Model.Specialization</p>
+        <p><strong>Department:</strong> @Model.DepartmentName</p>
+        <p><strong>Years of Experience:</strong> @Model.YearsOfExperience</p>
+        <p><strong>Phone:</strong> @Model.PhoneNumber</p>
+        <p><strong>Average Rating:</strong> @Model.AverageRate.ToString("0.0") (@Model.FeedbackCount Feedbacks)</p>
+    </div>
+
+    <div class="appointments-section">
+        <h2>Upcoming Appointments</h2>
+
+        @if (!Model.UpcomingAppointments.Any())
+        {
+            <p>No upcoming appointments.</p>
+        }
+        else
+        {
+            <table class="appointments-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Capacity</th>
+                        <th>Booked</th>
+                        <th>Remaining</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var appt in Model.UpcomingAppointments)
+                    {
+                        <tr>
+                            <td>@appt.AppointmentDate.ToString("dd MMM yyyy")</td>
+                            <td>@appt.StartTime.ToString(@"hh\:mm") - @appt.EndTime.ToString(@"hh\:mm")</td>
+                            <td>@appt.Capacity</td>
+                            <td>@appt.CurrentCount</td>
+                            <td>@appt.RemainingSlots</td>
+                            <td>@appt.Status</td>
+                            <td>
+                                <a asp-action="AppointmentDetails" asp-route-id="@appt.AppointmentId" class="btn primary-btn">Details</a>
+                                <a asp-action="CreatePrescription" asp-route-patientId="0" asp-route-doctorId="@Model.DoctorId" class="btn secondary-btn">New Prescription</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+        <div class="actions">
+            <a asp-action="Appointments" asp-route-doctorId="@Model.DoctorId" class="btn primary-btn">View All Appointments</a>
+            <a asp-action="CreateAppointment" asp-route-doctorId="@Model.DoctorId" class="btn secondary-btn">Add Appointment</a>
+        </div>
+    </div>
+
+</div>

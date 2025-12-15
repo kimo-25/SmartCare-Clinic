@@ -1,5 +1,64 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model SCMS.ViewModels.DoctorAppointmentVm
+
 @{
+    ViewData["Title"] = "Appointment Details";
 }
+
+<!-- Unified Clinic CSS -->
+<link rel="stylesheet" href="~/css/clinic.css" />
+
+<div class="container appointment-details">
+
+    <h2 class="page-title">Appointment Details</h2>
+
+    <div class="details-card">
+
+        <div class="detail-row">
+            <span class="label">Date</span>
+            <span class="value">
+                @Model.AppointmentDate.ToString("dd MMM yyyy")
+            </span>
+        </div>
+
+        <div class="detail-row">
+            <span class="label">Time</span>
+            <span class="value">
+                @Model.StartTime.ToString(@"hh\:mm")
+                -
+                @Model.EndTime.ToString(@"hh\:mm")
+            </span>
+        </div>
+
+        <div class="detail-row">
+            <span class="label">Capacity</span>
+            <span class="value">@Model.Capacity</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="label">Booked Patients</span>
+            <span class="value">@Model.CurrentCount</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="label">Remaining Slots</span>
+            <span class="value">@Model.RemainingSlots</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="label">Status</span>
+            <span class="value status-text">
+                @Model.Status
+            </span>
+        </div>
+
+    </div>
+
+    <div class="actions">
+        <a asp-action="Dashboard"
+           asp-controller="Doctor"
+           class="btn secondary-btn">
+            Back
+        </a>
+    </div>
+
+</div>
