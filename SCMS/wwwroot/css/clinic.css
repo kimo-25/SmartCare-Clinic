@@ -297,6 +297,119 @@ h3 {
     text-align: center;
     font-size: 14px;
 }
+.profile-alert {
+    background: #fff3cd;
+    border: 1px solid #ffeeba;
+    color: #856404;
+    padding: 12px 14px;
+    border-radius: 10px;
+    margin: 15px 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.btn-complete {
+    background: #1e88e5;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+    .btn-complete:hover {
+        opacity: .9;
+    }
+.patient-edit {
+    max-width: 900px;
+    margin: 30px auto;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.edit-form .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 15px;
+}
+
+.edit-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+    .edit-form .form-group.full {
+        grid-column: 1 / -1;
+    }
+
+.form-control {
+    padding: 10px 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    outline: none;
+}
+
+    .form-control:focus {
+        border-color: #1e88e5;
+        box-shadow: 0 0 0 3px rgba(30,136,229,0.12);
+    }
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.btn-primary {
+    background: #1e88e5;
+    color: #fff;
+    border: none;
+    padding: 10px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.btn-secondary {
+    background: #eceff1;
+    color: #263238;
+    border: 1px solid #e0e0e0;
+    padding: 10px 14px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.btn-primary:hover {
+    opacity: .9;
+}
+
+.btn-secondary:hover {
+    opacity: .9;
+}
+
+.form-alert {
+    background: #fff3cd;
+    border: 1px solid #ffeeba;
+    color: #856404;
+    padding: 12px 14px;
+    border-radius: 10px;
+    margin-top: 12px;
+}
+
+.text-danger {
+    color: #c62828;
+    font-size: 0.9rem;
+}
+
 
 /* ===== Responsive ===== */
 @media (max-width: 768px) {

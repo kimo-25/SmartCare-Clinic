@@ -21,7 +21,7 @@
         public string Gender { get; set; } = null!;
         public string Address { get; set; } = null!;
         public string? MedicalHistorySummary { get; set; }
-
+        public bool IsProfileIncomplete { get; set; }
         public List<PatientProfileRecordVm> Records { get; set; } = new();
     }
 }

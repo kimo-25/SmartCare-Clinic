@@ -19,7 +19,6 @@ namespace SCMS.Controllers
             _context = context;
         }
 
-        // ================= Helpers =================
         private string GetDiscriminator(User user)
         {
             return _context.Entry(user)
@@ -47,7 +46,6 @@ namespace SCMS.Controllers
             return (s ?? "").Trim();
         }
 
-        // ================= REGISTER =================
         [HttpGet]
         public IActionResult Register()
         {
@@ -68,7 +66,6 @@ namespace SCMS.Controllers
 
             string passwordHash = HashPassword(vm.Password);
 
-            // ✅ إنشاء المستخدم حسب النوع (TPH)
             User user = vm.UserType switch
             {
                 "Patient" => new Patient
@@ -111,7 +108,6 @@ namespace SCMS.Controllers
                 _ => new User()
             };
 
-            // ===== Common fields =====
             user.FullName = vm.FullName;
             user.Email = vm.Email;
             user.Phone = vm.Phone;
@@ -133,7 +129,6 @@ namespace SCMS.Controllers
             return RedirectToAction(nameof(Login));
         }
 
-        // ================= LOGIN =================
         [HttpGet]
         public IActionResult Login()
         {
@@ -146,7 +141,6 @@ namespace SCMS.Controllers
             if (!ModelState.IsValid)
                 return View(vm);
 
-            // 1) هات اليوزر
             var user = await _context.Users
                 .FirstOrDefaultAsync(u =>
                     (u.Email == vm.EmailOrUsername || u.Username == vm.EmailOrUsername)
@@ -158,30 +152,21 @@ namespace SCMS.Controllers
                 return View(vm);
             }
 
-            // 2) النوع الحقيقي من الداتا (Discriminator)
-            var discriminator = GetDiscriminator(user); // "Admin" / "Doctor" / ...
+            var discriminator = GetDiscriminator(user);
             var realUserTypeEnum = MapDiscriminatorToUserType(discriminator);
-
-            // 3) النوع اللي اليوزر اختاره من الـ dropdown
             var selected = NormalizeUserType(vm.UserType);
 
-            // ✅ هنا حل المشكلة: لازم المختار يطابق الحقيقي
             if (!string.Equals(selected, discriminator, StringComparison.OrdinalIgnoreCase))
-            {
-                // متعملش Session ولا Cookie
                 return RedirectToAction("AccessDenied", "Account");
-            }
 
-            // 4) Session (زي ما كنت عامل)
             HttpContext.Session.SetString("UserId", user.UserId.ToString());
             HttpContext.Session.SetInt32("UserType", (int)realUserTypeEnum);
 
-            // 5) Cookie Auth (Claims)
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
                 new Claim(ClaimTypes.Name, user.Username ?? user.Email ?? "user"),
-                new Claim(ClaimTypes.Role, discriminator) // مهم لـ [Authorize(Roles="...")]
+                new Claim(ClaimTypes.Role, discriminator)
             };
 
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -196,19 +181,17 @@ namespace SCMS.Controllers
                     ExpiresUtc = DateTimeOffset.UtcNow.AddHours(6)
                 });
 
-            // 6) Redirect حسب النوع الحقيقي
             return realUserTypeEnum switch
             {
                 UserType.Admin => RedirectToAction("Dashboard", "Admin"),
                 UserType.Doctor => RedirectToAction("Dashboard", "Doctor"),
                 UserType.Receptionist => RedirectToAction("Dashboard", "Reception"),
                 UserType.Radiologist => RedirectToAction("Requests", "Radiology"),
-                UserType.Patient => RedirectToAction("Index", "Home"),
+                UserType.Patient => RedirectToAction("Dashboard", "Patient", new { id = user.UserId }),
                 _ => RedirectToAction("Index", "Home")
             };
         }
 
-        // ================= LOGOUT =================
         public async Task<IActionResult> Logout()
         {
             HttpContext.Session.Clear();
@@ -216,7 +199,6 @@ namespace SCMS.Controllers
             return RedirectToAction(nameof(Login));
         }
 
-        // ================= PASSWORD HASHING =================
         private string HashPassword(string password)
         {
             byte[] salt = RandomNumberGenerator.GetBytes(16);
@@ -248,7 +230,7 @@ namespace SCMS.Controllers
 
             return computed == stored;
         }
-        // ================= FORGOT PASSWORD =================
+
         [HttpGet]
         public IActionResult ForgotPassword()
         {
@@ -264,17 +246,13 @@ namespace SCMS.Controllers
                 return View();
             }
 
-            var user = await _context.Users.FirstOrDefaultAsync(u =>
+            await _context.Users.FirstOrDefaultAsync(u =>
                 (u.Email == EmailOrUsername || u.Username == EmailOrUsername) && u.IsActive);
 
-            // مهم: ما تكشفش إذا اليوزر موجود ولا لأ (Security)
             TempData["Message"] = "If the account exists, reset instructions will be sent.";
-
-            // حالياً إنت مش عامل Email إرسال، فبنكتفي برسالة
             return RedirectToAction(nameof(Login));
         }
 
-        // ================= ACCESS DENIED =================
         public IActionResult AccessDenied()
         {
             return View();

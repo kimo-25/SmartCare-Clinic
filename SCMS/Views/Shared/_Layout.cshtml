@@ -41,7 +41,7 @@
             <ul class="nav flex-column">
 
                 @* Receptionist Menu *@
-                @if (userType == (int)UserType.Receptionist || userType == (int)UserType.Admin)
+                @if (userType == (int)UserType.Receptionist)
                 {
                     <li class="nav-item">
                         <a class="nav-link @Active("Reception", "Dashboard")"
@@ -68,6 +68,31 @@
                         <a class="nav-link @Active("Reception", "RadiologyRequests")"
                            asp-controller="Reception" asp-action="RadiologyRequests">
                             <span>🩻</span> <span>Radiology Requests</span>
+                        </a>
+                    </li>
+                }
+
+
+                @if (userType == (int)UserType.Admin)
+                {
+                    <li class="nav-item">
+                        <a class="nav-link @Active("Admin", "Dashboard")"
+                           asp-controller="Admin" asp-action="Dashboard">
+                            <span>📊</span> <span>Dashboard</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link @Active("Admin", "AppointmentsOverview")"
+                           asp-controller="Admin" asp-action="AppointmentsOverview">
+                            <span>📅</span> <span>AppointmentsOverview</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link @Active("Admin", "Users")"
+                           asp-controller="Admin" asp-action="Users">
+                            <span>👥</span> <span>Users</span>
                         </a>
                     </li>
                 }

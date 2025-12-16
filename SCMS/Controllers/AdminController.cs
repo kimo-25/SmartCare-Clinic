@@ -28,7 +28,7 @@ namespace SCMS.Controllers
             return t.HasValue ? (UserType)t.Value : UserType.User;
         }
 
-        private IActionResult RequireAdmin()
+        private IActionResult? RequireAdmin()
         {
             var userId = CurrentUserId();
             if (userId == 0) return RedirectToAction("Login", "Account");
@@ -36,7 +36,7 @@ namespace SCMS.Controllers
             if (CurrentUserType() != UserType.Admin)
                 return RedirectToAction("AccessDenied", "Account");
 
-            return null!;
+            return null; // ✅ مهم
         }
 
         // ================= Dashboard =================
@@ -61,6 +61,7 @@ namespace SCMS.Controllers
                         UserId = u.UserId,
                         FullName = u.FullName,
                         Email = u.Email,
+                        Phone = u.Phone,
                         UserType = EF.Property<string>(u, "Discriminator"),
                         DateAdded = u.CreatedAt
                     })
@@ -83,7 +84,7 @@ namespace SCMS.Controllers
                     UserId = u.UserId,
                     FullName = u.FullName,
                     Email = u.Email,
-                    Phone = u.Phone!,
+                    Phone = u.Phone,
                     UserType = EF.Property<string>(u, "Discriminator"),
                     DateAdded = u.CreatedAt
                 })
@@ -119,6 +120,7 @@ namespace SCMS.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateUser(RegisterVm vm)
         {
             var guard = RequireAdmin();
@@ -144,15 +146,14 @@ namespace SCMS.Controllers
             ));
             var passwordHash = $"{Convert.ToBase64String(salt)}.{hash}";
 
-            // ✅ TPH: النوع بيتحدد من الكلاس
-            SCMS.Models.User dbUser = vm.UserType switch
+            User dbUser = vm.UserType switch
             {
                 "Admin" => new Admin(),
                 "Doctor" => new Doctor(),
                 "Receptionist" => new Receptionist(),
                 "Radiologist" => new Radiologist(),
                 "Patient" => new Patient(),
-                _ => new SCMS.Models.User()
+                _ => new User()
             };
 
             dbUser.FullName = vm.FullName;
@@ -166,7 +167,7 @@ namespace SCMS.Controllers
             await _context.SaveChangesAsync();
 
             TempData["Message"] = "User created successfully!";
-            return RedirectToAction("Users");
+            return RedirectToAction(nameof(Users));
         }
 
         // ================= Edit User =================
@@ -176,57 +177,64 @@ namespace SCMS.Controllers
             var guard = RequireAdmin();
             if (guard != null) return guard;
 
-            var dbUser = await _context.Users.FindAsync(id);
+            // ✅ عشان TPH يرجّع النوع الحقيقي
+            var dbUser = await _context.Users.FirstOrDefaultAsync(u => u.UserId == id);
             if (dbUser == null) return NotFound();
 
             return View(dbUser);
         }
 
         [HttpPost]
-        public async Task<IActionResult> EditUser(SCMS.Models.User model, string UserType)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditUser(User model, string userType)
         {
             var guard = RequireAdmin();
             if (guard != null) return guard;
 
-            var dbUser = await _context.Users.FindAsync(model.UserId);
+            var dbUser = await _context.Users.FirstOrDefaultAsync(u => u.UserId == model.UserId);
             if (dbUser == null) return NotFound();
 
+            // تحديث البيانات المشتركة
             dbUser.FullName = model.FullName;
             dbUser.Email = model.Email;
             dbUser.Phone = model.Phone;
 
-            // تغيير نوع المستخدم إذا لزم الأمر (TPH)
-            if (!string.IsNullOrEmpty(UserType) && dbUser.GetType().Name != UserType)
-            {
-                SCMS.Models.User newUser = UserType switch
-                {
-                    "Admin" => new Admin(),
-                    "Doctor" => new Doctor(),
-                    "Receptionist" => new Receptionist(),
-                    "Radiologist" => new Radiologist(),
-                    "Patient" => new Patient(),
-                    _ => dbUser
-                };
+            var currentType = dbUser.GetType().Name;
 
-                newUser.UserId = dbUser.UserId;
-                newUser.FullName = dbUser.FullName;
-                newUser.Email = dbUser.Email;
-                newUser.Phone = dbUser.Phone;
-                newUser.Username = dbUser.Username;
-                newUser.PasswordHash = dbUser.PasswordHash;
-                newUser.IsActive = dbUser.IsActive;
-                newUser.CreatedAt = dbUser.CreatedAt;
-
-                _context.Entry(dbUser).State = EntityState.Detached;
-                _context.Users.Update(newUser);
-            }
-            else
+            // لو النوع ما اتغيرش
+            if (string.Equals(currentType, userType, StringComparison.OrdinalIgnoreCase))
             {
-                _context.Users.Update(dbUser);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Users));
             }
 
+            // ✅ النوع اتغير: Remove + Add (TPH Discriminator لا يتغير بـ Update)
+            var newUser = userType switch
+            {
+                "Admin" => new Admin(),
+                "Doctor" => new Doctor(),
+                "Receptionist" => new Receptionist(),
+                "Radiologist" => new Radiologist(),
+                "Patient" => new Patient(),
+                _ => new User()
+            };
+
+            newUser.UserId = dbUser.UserId;
+            newUser.FullName = dbUser.FullName;
+            newUser.Email = dbUser.Email;
+            newUser.Phone = dbUser.Phone;
+            newUser.Username = dbUser.Username;
+            newUser.PasswordHash = dbUser.PasswordHash;
+            newUser.IsActive = dbUser.IsActive;
+            newUser.CreatedAt = dbUser.CreatedAt;
+
+            _context.Users.Remove(dbUser);
             await _context.SaveChangesAsync();
-            return RedirectToAction("Users");
+
+            _context.Users.Add(newUser);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Users));
         }
     }
 }

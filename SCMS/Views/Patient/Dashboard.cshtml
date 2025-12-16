@@ -1,9 +1,23 @@
 ﻿@model SCMS.ViewModels.Patient.PatientVM
-
 <link rel="stylesheet" href="~/css/clinic.css" />
 
 <div class="patient-dashboard">
     <h2>Welcome, @Model.FullName</h2>
+
+    @if (Model.IsProfileIncomplete)
+    {
+        <div class="profile-alert">
+            <strong>⚠️ Attention:</strong>
+            Please Complete Your Informatin
+
+            <a asp-controller="Patient"
+               asp-action="Profile"
+               asp-route-id="@Model.PatientId"
+               class="btn-complete">
+                Complete Information
+            </a>
+        </div>
+    }
 
     <div class="stats">
         <div class="card">
