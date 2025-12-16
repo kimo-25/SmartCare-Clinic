@@ -14,28 +14,43 @@ namespace SCMS.Controllers
             _context = context;
         }
 
-        // ------------------------
-        // helper: get doctor id from session
-        private int? GetDoctorIdFromSession()
+        private int CurrentUserId()
         {
             var userIdStr = HttpContext.Session.GetString("UserId");
-            if (string.IsNullOrWhiteSpace(userIdStr)) return null;
-            return int.TryParse(userIdStr, out var id) ? id : null;
+            return int.TryParse(userIdStr, out var id) ? id : 0;
         }
 
-        // ------------------------
+        private UserType CurrentUserType()
+        {
+            var t = HttpContext.Session.GetInt32("UserType");
+            return t.HasValue ? (UserType)t.Value : UserType.User;
+        }
+
+        private IActionResult RequireDoctor()
+        {
+            var userId = CurrentUserId();
+            if (userId == 0) return RedirectToAction("Login", "Account");
+
+            if (CurrentUserType() != UserType.Doctor && CurrentUserType() != UserType.Admin)
+                return RedirectToAction("AccessDenied", "Account");
+
+            return null!;
+        }
+
         // Dashboard
         public async Task<IActionResult> Dashboard()
         {
-            var id = GetDoctorIdFromSession();
-            if (id == null) return RedirectToAction("Login", "Account");
+            var guard = RequireDoctor();
+            if (guard != null) return guard;
+
+            var id = CurrentUserId();
 
             var doctor = await _context.Set<Doctor>()
                 .Include(d => d.Feedbacks)
                 .Include(d => d.Appointments)
                     .ThenInclude(a => a.Bookings)
                     .ThenInclude(b => b.Patient)
-                .FirstOrDefaultAsync(d => d.UserId == id.Value);
+                .FirstOrDefaultAsync(d => d.UserId == id);
 
             if (doctor == null) return NotFound();
 
@@ -67,16 +82,17 @@ namespace SCMS.Controllers
             return View(vm);
         }
 
-        // ------------------------
-        // 1️⃣ Appointments List
+        // Appointments List
         public async Task<IActionResult> Appointments()
         {
-            var id = GetDoctorIdFromSession();
-            if (id == null) return RedirectToAction("Login", "Account");
+            var guard = RequireDoctor();
+            if (guard != null) return guard;
+
+            var id = CurrentUserId();
 
             var doctor = await _context.Set<Doctor>()
                 .Include(d => d.Appointments)
-                .FirstOrDefaultAsync(d => d.UserId == id.Value);
+                .FirstOrDefaultAsync(d => d.UserId == id);
 
             if (doctor == null) return NotFound();
 
@@ -101,15 +117,15 @@ namespace SCMS.Controllers
             return View(vm);
         }
 
-        // ------------------------
-        // 2️⃣ Appointment Details
         public async Task<IActionResult> AppointmentDetails(int id)
         {
-            var doctorId = GetDoctorIdFromSession();
-            if (doctorId == null) return RedirectToAction("Login", "Account");
+            var guard = RequireDoctor();
+            if (guard != null) return guard;
+
+            var doctorId = CurrentUserId();
 
             var appointment = await _context.Appointments
-                .FirstOrDefaultAsync(a => a.AppointmentId == id && a.DoctorId == doctorId.Value);
+                .FirstOrDefaultAsync(a => a.AppointmentId == id && a.DoctorId == doctorId);
 
             if (appointment == null) return NotFound();
 
@@ -127,13 +143,11 @@ namespace SCMS.Controllers
             return View(vm);
         }
 
-        // ------------------------
-        // 3️⃣ Create Appointment
         [HttpGet]
         public IActionResult CreateAppointment()
         {
-            var doctorId = GetDoctorIdFromSession();
-            if (doctorId == null) return RedirectToAction("Login", "Account");
+            var guard = RequireDoctor();
+            if (guard != null) return guard;
 
             return View();
         }
@@ -142,15 +156,17 @@ namespace SCMS.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateAppointment(DoctorAppointmentVm vm)
         {
-            var doctorId = GetDoctorIdFromSession();
-            if (doctorId == null) return RedirectToAction("Login", "Account");
+            var guard = RequireDoctor();
+            if (guard != null) return guard;
+
+            var doctorId = CurrentUserId();
 
             if (!ModelState.IsValid)
                 return View(vm);
 
             var appointment = new Appointment
             {
-                DoctorId = doctorId.Value,
+                DoctorId = doctorId,
                 AppointmentDate = vm.AppointmentDate,
                 StartTime = vm.StartTime,
                 EndTime = vm.EndTime,
@@ -165,16 +181,16 @@ namespace SCMS.Controllers
             return RedirectToAction("Appointments");
         }
 
-        // ------------------------
-        // 4️⃣ Create Prescription
         [HttpGet]
         public IActionResult CreatePrescription(int patientId)
         {
-            var doctorId = GetDoctorIdFromSession();
-            if (doctorId == null) return RedirectToAction("Login", "Account");
+            var guard = RequireDoctor();
+            if (guard != null) return guard;
+
+            var doctorId = CurrentUserId();
 
             ViewBag.PatientId = patientId;
-            ViewBag.DoctorId = doctorId.Value;
+            ViewBag.DoctorId = doctorId;
             return View();
         }
 
@@ -182,14 +198,15 @@ namespace SCMS.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreatePrescription(Prescription vm)
         {
-            var doctorId = GetDoctorIdFromSession();
-            if (doctorId == null) return RedirectToAction("Login", "Account");
+            var guard = RequireDoctor();
+            if (guard != null) return guard;
+
+            var doctorId = CurrentUserId();
 
             if (!ModelState.IsValid)
                 return View(vm);
 
-            // enforce doctor id from session (prevent tampering)
-            vm.DoctorId = doctorId.Value;
+            vm.DoctorId = doctorId; // prevent tampering
             vm.CreatedAt = DateTime.UtcNow;
 
             _context.Prescriptions.Add(vm);
@@ -198,28 +215,28 @@ namespace SCMS.Controllers
             return RedirectToAction("Dashboard");
         }
 
-        // ------------------------
-        // 5️⃣ Medical Records - List
         public async Task<IActionResult> MedicalRecords()
         {
-            var doctorId = GetDoctorIdFromSession();
-            if (doctorId == null) return RedirectToAction("Login", "Account");
+            var guard = RequireDoctor();
+            if (guard != null) return guard;
+
+            var doctorId = CurrentUserId();
 
             var records = await _context.MedicalRecords
                 .Include(r => r.Patient)
                 .Include(r => r.RelatedPrescription)
-                .Where(r => r.RelatedPrescription == null || r.RelatedPrescription.DoctorId == doctorId.Value)
+                .Where(r => r.RelatedPrescription == null || r.RelatedPrescription.DoctorId == doctorId)
                 .ToListAsync();
 
             return View(records);
         }
 
-        // ------------------------
-        // 6️⃣ Medical Record Details
         public async Task<IActionResult> DetailsMedicalRecord(int id)
         {
-            var doctorId = GetDoctorIdFromSession();
-            if (doctorId == null) return RedirectToAction("Login", "Account");
+            var guard = RequireDoctor();
+            if (guard != null) return guard;
+
+            var doctorId = CurrentUserId();
 
             var record = await _context.MedicalRecords
                 .Include(r => r.Patient)
@@ -229,20 +246,19 @@ namespace SCMS.Controllers
 
             if (record == null) return NotFound();
 
-            // optional: ensure this record belongs to this doctor if it has prescription
-            if (record.RelatedPrescription != null && record.RelatedPrescription.DoctorId != doctorId.Value)
-                return Forbid();
+            if (record.RelatedPrescription != null && record.RelatedPrescription.DoctorId != doctorId)
+                return RedirectToAction("AccessDenied", "Account");
 
             return View(record);
         }
 
-        // ------------------------
-        // 7️⃣ Edit Medical Record - GET
         [HttpGet]
         public async Task<IActionResult> EditMedicalRecord(int id)
         {
-            var doctorId = GetDoctorIdFromSession();
-            if (doctorId == null) return RedirectToAction("Login", "Account");
+            var guard = RequireDoctor();
+            if (guard != null) return guard;
+
+            var doctorId = CurrentUserId();
 
             var record = await _context.MedicalRecords
                 .Include(r => r.RelatedPrescription)
@@ -250,20 +266,20 @@ namespace SCMS.Controllers
 
             if (record == null) return NotFound();
 
-            if (record.RelatedPrescription != null && record.RelatedPrescription.DoctorId != doctorId.Value)
-                return Forbid();
+            if (record.RelatedPrescription != null && record.RelatedPrescription.DoctorId != doctorId)
+                return RedirectToAction("AccessDenied", "Account");
 
             return View(record);
         }
 
-        // ------------------------
-        // 8️⃣ Edit Medical Record - POST
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditMedicalRecord(MedicalRecord vm)
         {
-            var doctorId = GetDoctorIdFromSession();
-            if (doctorId == null) return RedirectToAction("Login", "Account");
+            var guard = RequireDoctor();
+            if (guard != null) return guard;
+
+            var doctorId = CurrentUserId();
 
             if (!ModelState.IsValid)
                 return View(vm);
@@ -274,8 +290,8 @@ namespace SCMS.Controllers
 
             if (record == null) return NotFound();
 
-            if (record.RelatedPrescription != null && record.RelatedPrescription.DoctorId != doctorId.Value)
-                return Forbid();
+            if (record.RelatedPrescription != null && record.RelatedPrescription.DoctorId != doctorId)
+                return RedirectToAction("AccessDenied", "Account");
 
             record.Description = vm.Description;
             record.PrescriptionId = vm.PrescriptionId;
@@ -286,12 +302,10 @@ namespace SCMS.Controllers
             return RedirectToAction("MedicalRecords");
         }
 
-        // ------------------------
-        // Patient File
         public async Task<IActionResult> PatientFile(int patientId)
         {
-            var doctorId = GetDoctorIdFromSession();
-            if (doctorId == null) return RedirectToAction("Login", "Account");
+            var guard = RequireDoctor();
+            if (guard != null) return guard;
 
             var patient = await _context.Patients
                 .FirstOrDefaultAsync(p => p.UserId == patientId);

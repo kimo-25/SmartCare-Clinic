@@ -49,7 +49,7 @@ namespace SCMS.Controllers
                     RequestId = r.RequestId,
                     PatientName = r.Patient.FullName,
                     Age = r.Patient.Age,
-                    Phone = r.Patient.Phone,
+                    Phone = r.Patient.Phone!,
                     RequestDate = r.RequestDate,
                     TestName = r.TestName,
                     Status = r.Status

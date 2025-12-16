@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.EntityFrameworkCore;
 using SCMS.BL;
 using SCMS.BL.BLClasses;
 using SCMS.BL.BLInterfaces;
@@ -17,12 +18,23 @@ namespace SCMS
             );
 
             builder.Services.AddDistributedMemoryCache();
+
             builder.Services.AddSession(options =>
             {
                 options.IdleTimeout = TimeSpan.FromHours(6);
                 options.Cookie.HttpOnly = true;
                 options.Cookie.IsEssential = true;
             });
+
+            // (اختياري) تجهيز Authentication لو احتجته بعدين
+            builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie(options =>
+                {
+                    options.LoginPath = "/Account/Login";
+                    options.AccessDeniedPath = "/Account/AccessDenied";
+                });
+
+            builder.Services.AddAuthorization();
 
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IUserService, UserService>();
@@ -59,6 +71,8 @@ namespace SCMS
 
             app.UseSession();
 
+            // (اختياري) آمن إضافته، ولو مش مستخدم [Authorize] مش هيأثر
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllerRoute(
@@ -71,7 +85,6 @@ namespace SCMS
                 var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
                 var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
 
-
                 var adminExists = context.Users.OfType<Admin>()
                     .Any(a => a.Username == "admin" || a.Email == "admin@scms.com");
 
@@ -82,7 +95,7 @@ namespace SCMS
                         FullName = "System Admin",
                         Email = "admin@scms.com",
                         Username = "admin",
-                        Phone = "01000000000", 
+                        Phone = "01000000000",
                         PasswordHash = authService.HashPassword("Admin@123"),
                         IsActive = true,
                         CreatedAt = DateTime.UtcNow,

@@ -4,7 +4,6 @@ using SCMS.Models;
 using SCMS.ViewModels;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
-using Microsoft.AspNetCore.Http;
 
 namespace SCMS.Controllers
 {
@@ -15,6 +14,29 @@ namespace SCMS.Controllers
         public AccountController(AppDbContext context)
         {
             _context = context;
+        }
+
+        // ================= Helpers =================
+        private string GetDiscriminator(User user)
+        {
+            return _context.Entry(user)
+                .Property("Discriminator")
+                .CurrentValue?
+                .ToString() ?? "User";
+        }
+
+        private UserType MapDiscriminatorToUserType(string discriminator)
+        {
+            return discriminator switch
+            {
+                "Admin" => UserType.Admin,
+                "Doctor" => UserType.Doctor,
+                "Receptionist" => UserType.Receptionist,
+                "Radiologist" => UserType.Radiologist,
+                "Patient" => UserType.Patient,
+                "Staff" => UserType.Staff,
+                _ => UserType.User
+            };
         }
 
         // ================= REGISTER =================
@@ -38,7 +60,7 @@ namespace SCMS.Controllers
 
             string passwordHash = HashPassword(vm.Password);
 
-            // ✅ Create user based on type + fill required fields (TPH NOT NULL columns)
+            // ✅ TPH: النوع بيتحدد من الكلاس نفسه (Patient/Doctor/...)
             SCMS.Models.User user = vm.UserType switch
             {
                 "Patient" => new Patient
@@ -52,8 +74,8 @@ namespace SCMS.Controllers
                 "Doctor" => new Doctor
                 {
                     DepartmentName = "General",
-                    PhoneNumber = vm.Phone,       // مهم جداً لأن Staff.PhoneNumber Required
-                    Specialization = "General",   // مهم جداً لأن Doctor.Specialization Required
+                    PhoneNumber = vm.Phone,
+                    Specialization = "General",
                     YearsOfExperience = 0,
                     Salary = 0
                 },
@@ -120,22 +142,22 @@ namespace SCMS.Controllers
                 return View(vm);
             }
 
-            var discriminator = _context.Entry(user)
-                .Property("Discriminator")
-                .CurrentValue?.ToString() ?? "User";
+            // ✅ النوع من Discriminator (TPH)
+            var discriminator = GetDiscriminator(user);
+            var userType = MapDiscriminatorToUserType(discriminator);
 
-            // Save session
+            // ✅ Save session (متسق: UserType Int)
             HttpContext.Session.SetString("UserId", user.UserId.ToString());
-            HttpContext.Session.SetString("UserType", discriminator);
+            HttpContext.Session.SetInt32("UserType", (int)userType);
 
-            // Redirect based on user type
-            return discriminator switch
+            // Redirect based on mapped enum
+            return userType switch
             {
-                "Admin" => RedirectToAction("Dashboard", "Admin"),
-                "Doctor" => RedirectToAction("Dashboard", "Doctor"),
-                "Receptionist" => RedirectToAction("Dashboard", "Reception"),
-                "Radiologist" => RedirectToAction("Requests", "Radiology"),
-                "Patient" => RedirectToAction("Index", "Home"),
+                UserType.Admin => RedirectToAction("Dashboard", "Admin"),
+                UserType.Doctor => RedirectToAction("Dashboard", "Doctor"),
+                UserType.Receptionist => RedirectToAction("Dashboard", "Reception"),
+                UserType.Radiologist => RedirectToAction("Requests", "Radiology"),
+                UserType.Patient => RedirectToAction("Index", "Home"),
                 _ => RedirectToAction("Index", "Home")
             };
         }
@@ -186,14 +208,13 @@ namespace SCMS.Controllers
             return View();
         }
 
-        // ================= PROTECTED ADMIN PAGE EXAMPLE =================
+        // مثال
         public IActionResult SomeAdminPage()
         {
-            var userType = HttpContext.Session.GetString("UserType");
-            if (userType != "Admin")
-            {
+            var userType = HttpContext.Session.GetInt32("UserType");
+            if (!userType.HasValue || (UserType)userType.Value != UserType.Admin)
                 return RedirectToAction("AccessDenied", "Account");
-            }
+
             return View();
         }
 
@@ -251,7 +272,7 @@ namespace SCMS.Controllers
                 return View(vm);
             }
 
-            user.PasswordHash = HashPassword(vm.NewPassword);
+            user.PasswordHash = HashPassword(vm.NewPassword!);
             _context.Update(user);
             await _context.SaveChangesAsync();
 

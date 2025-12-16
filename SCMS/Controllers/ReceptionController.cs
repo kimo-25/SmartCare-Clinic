@@ -26,14 +26,23 @@ namespace SCMS.Controllers
             return t.HasValue ? (UserType)t.Value : UserType.User;
         }
 
-        // =================== Dashboard ===================
-        public async Task<IActionResult> Dashboard()
+        private IActionResult RequireReceptionOrAdmin()
         {
             var userId = CurrentUserId();
             if (userId == 0) return RedirectToAction("Login", "Account");
 
-            if (CurrentUserType() != UserType.Receptionist && CurrentUserType() != UserType.Admin)
-                return Forbid();
+            var type = CurrentUserType();
+            if (type != UserType.Receptionist && type != UserType.Admin)
+                return RedirectToAction("AccessDenied", "Account");
+
+            return null!;
+        }
+
+        // =================== Dashboard ===================
+        public async Task<IActionResult> Dashboard()
+        {
+            var guard = RequireReceptionOrAdmin();
+            if (guard != null) return guard;
 
             var today = DateTime.Today;
 
@@ -67,7 +76,7 @@ namespace SCMS.Controllers
                     PatientId = p.UserId,
                     FullName = p.FullName,
                     Age = p.Age,
-                    Phone = p.Phone,
+                    Phone = p.Phone!,
                     LastVisit = _context.MedicalRecords
                         .Where(r => r.PatientId == p.UserId)
                         .OrderByDescending(r => r.RecordDate)
@@ -82,13 +91,16 @@ namespace SCMS.Controllers
         // =================== Patients List ===================
         public async Task<IActionResult> Patients(int page = 1, string? searchTerm = null)
         {
+            var guard = RequireReceptionOrAdmin();
+            if (guard != null) return guard;
+
             const int pageSize = 10;
 
             var query = _context.Set<Patient>().AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
-                query = query.Where(p => p.FullName.Contains(searchTerm) || p.Phone.Contains(searchTerm));
+                query = query.Where(p => p.FullName.Contains(searchTerm) || p.Phone!.Contains(searchTerm));
             }
 
             var totalCount = await query.CountAsync();
@@ -109,7 +121,7 @@ namespace SCMS.Controllers
                     PatientId = p.UserId,
                     FullName = p.FullName,
                     Age = p.Age,
-                    Phone = p.Phone,
+                    Phone = p.Phone!,
                     LastVisit = _context.MedicalRecords
                         .Where(r => r.PatientId == p.UserId)
                         .OrderByDescending(r => r.RecordDate)
@@ -124,6 +136,9 @@ namespace SCMS.Controllers
         // =================== Edit / Add Patient ===================
         public async Task<IActionResult> EditPatient(int? id)
         {
+            var guard = RequireReceptionOrAdmin();
+            if (guard != null) return guard;
+
             if (id == null)
                 return View(new PatientFormVm());
 
@@ -134,7 +149,7 @@ namespace SCMS.Controllers
             {
                 PatientId = patient.UserId,
                 FullName = patient.FullName,
-                Phone = patient.Phone,
+                Phone = patient.Phone!,
                 Email = patient.Email,
                 Gender = patient.Gender,
                 DateOfBirth = patient.DateOfBirth,
@@ -149,12 +164,14 @@ namespace SCMS.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SavePatient(PatientFormVm model)
         {
+            var guard = RequireReceptionOrAdmin();
+            if (guard != null) return guard;
+
             if (!ModelState.IsValid)
                 return View("EditPatient", model);
 
             if (model.PatientId.HasValue)
             {
-                // Edit existing
                 var patient = await _context.Patients.FindAsync(model.PatientId.Value);
                 if (patient == null) return NotFound();
 
@@ -170,7 +187,6 @@ namespace SCMS.Controllers
             }
             else
             {
-                // Add new
                 var patient = new Patient
                 {
                     FullName = model.FullName,
@@ -193,6 +209,9 @@ namespace SCMS.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeletePatient(int id)
         {
+            var guard = RequireReceptionOrAdmin();
+            if (guard != null) return guard;
+
             var patient = await _context.Patients.FindAsync(id);
             if (patient == null) return NotFound();
 
@@ -204,6 +223,9 @@ namespace SCMS.Controllers
         // =================== Patient Details ===================
         public async Task<IActionResult> PatientDetails(int id)
         {
+            var guard = RequireReceptionOrAdmin();
+            if (guard != null) return guard;
+
             var patient = await _context.Set<Patient>()
                 .FirstOrDefaultAsync(p => p.UserId == id);
 
@@ -211,8 +233,8 @@ namespace SCMS.Controllers
 
             var records = await _context.MedicalRecords
                 .Include(r => r.RelatedPrescription)
-                .Include(r => r.RadiologyResult)
-                    .ThenInclude(rr => rr.Request)
+                .Include(r => r.RadiologyResult!)
+                    .ThenInclude(rr => rr.Request!)
                 .Where(r => r.PatientId == id)
                 .OrderByDescending(r => r.RecordDate)
                 .ToListAsync();
@@ -223,7 +245,7 @@ namespace SCMS.Controllers
                 FullName = patient.FullName,
                 Age = patient.Age,
                 DateOfBirth = patient.DateOfBirth,
-                Phone = patient.Phone,
+                Phone = patient.Phone!,
                 Address = patient.Address,
                 Allergies = patient.MedicalHistorySummary
             };
@@ -255,6 +277,9 @@ namespace SCMS.Controllers
         // =================== Appointments ===================
         public async Task<IActionResult> Appointments()
         {
+            var guard = RequireReceptionOrAdmin();
+            if (guard != null) return guard;
+
             var appointments = await _context.Appointments
                 .Include(a => a.Doctor)
                 .Include(a => a.Bookings).ThenInclude(b => b.Patient)
@@ -278,6 +303,9 @@ namespace SCMS.Controllers
         // =================== Radiology Requests ===================
         public async Task<IActionResult> RadiologyRequests()
         {
+            var guard = RequireReceptionOrAdmin();
+            if (guard != null) return guard;
+
             var requests = await _context.RadiologyRequests
                 .Include(r => r.Patient)
                 .Include(r => r.Doctor)
@@ -291,7 +319,8 @@ namespace SCMS.Controllers
                     RequestId = r.RequestId,
                     PatientName = r.Patient.FullName,
                     Age = r.Patient.Age,
-                    Phone = r.Patient.Phone,
+                    Phone = r.Patient.Phone!
+                    ,
                     RequestDate = r.RequestDate,
                     TestName = r.TestName,
                     Status = r.Status
@@ -302,9 +331,11 @@ namespace SCMS.Controllers
         }
 
         // =================== Radiology Request Details ===================
-        // =================== Radiology Request Details ===================
         public async Task<IActionResult> RadiologyRequestDetails(int id)
         {
+            var guard = RequireReceptionOrAdmin();
+            if (guard != null) return guard;
+
             var request = await _context.RadiologyRequests
                 .Include(r => r.Patient)
                 .Include(r => r.Doctor)
@@ -313,7 +344,6 @@ namespace SCMS.Controllers
 
             if (request == null) return NotFound();
 
-            // تأكد من Result ولو null نعمله object فارغ لتجنب NullReference
             if (request.Result == null)
             {
                 request.Result = new RadiologyResult();

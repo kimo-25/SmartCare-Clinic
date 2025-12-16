@@ -13,7 +13,7 @@ namespace SCMS.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     [Migration("20251215143121_end")]
-    partial class end
+    partial class InitialCreate 
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

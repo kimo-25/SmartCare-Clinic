@@ -28,8 +28,8 @@ namespace SCMS.BL.BLClasses
                 .Include(p => p.MedicalRecords)
                     .ThenInclude(r => r.RelatedPrescription)
                 .Include(p => p.MedicalRecords)
-                    .ThenInclude(r => r.RadiologyResult)
-                        .ThenInclude(rr => rr.Request)
+                    .ThenInclude(r => r.RadiologyResult!)
+                        .ThenInclude(rr => rr.Request!)
                 .FirstOrDefault(p => p.UserId == patientId);
 
             if (patient == null)

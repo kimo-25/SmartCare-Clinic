@@ -16,9 +16,35 @@ namespace SCMS.Controllers
             _context = context;
         }
 
+        private int CurrentUserId()
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            return int.TryParse(userIdStr, out var id) ? id : 0;
+        }
+
+        private UserType CurrentUserType()
+        {
+            var t = HttpContext.Session.GetInt32("UserType");
+            return t.HasValue ? (UserType)t.Value : UserType.User;
+        }
+
+        private IActionResult RequireAdmin()
+        {
+            var userId = CurrentUserId();
+            if (userId == 0) return RedirectToAction("Login", "Account");
+
+            if (CurrentUserType() != UserType.Admin)
+                return RedirectToAction("AccessDenied", "Account");
+
+            return null!;
+        }
+
         // ================= Dashboard =================
         public async Task<IActionResult> Dashboard()
         {
+            var guard = RequireAdmin();
+            if (guard != null) return guard;
+
             var vm = new AdminDashboardVm
             {
                 AdminName = "Admin",
@@ -47,6 +73,9 @@ namespace SCMS.Controllers
         // ================= Users List =================
         public async Task<IActionResult> Users()
         {
+            var guard = RequireAdmin();
+            if (guard != null) return guard;
+
             var users = await _context.Users
                 .OrderBy(u => u.FullName)
                 .Select(u => new UserSummaryVm
@@ -54,7 +83,7 @@ namespace SCMS.Controllers
                     UserId = u.UserId,
                     FullName = u.FullName,
                     Email = u.Email,
-                    Phone = u.Phone,
+                    Phone = u.Phone!,
                     UserType = EF.Property<string>(u, "Discriminator"),
                     DateAdded = u.CreatedAt
                 })
@@ -63,11 +92,12 @@ namespace SCMS.Controllers
             return View(users);
         }
 
-       
-
         // ================= Appointments Overview =================
         public async Task<IActionResult> AppointmentsOverview()
         {
+            var guard = RequireAdmin();
+            if (guard != null) return guard;
+
             var appointments = await _context.Appointments
                 .Include(a => a.Doctor)
                 .Include(a => a.Bookings)
@@ -82,12 +112,18 @@ namespace SCMS.Controllers
         [HttpGet]
         public IActionResult CreateUser()
         {
+            var guard = RequireAdmin();
+            if (guard != null) return guard;
+
             return View(new RegisterVm());
         }
 
         [HttpPost]
         public async Task<IActionResult> CreateUser(RegisterVm vm)
         {
+            var guard = RequireAdmin();
+            if (guard != null) return guard;
+
             if (!ModelState.IsValid)
                 return View(vm);
 
@@ -108,12 +144,13 @@ namespace SCMS.Controllers
             ));
             var passwordHash = $"{Convert.ToBase64String(salt)}.{hash}";
 
-            // Create user based on type
+            // ✅ TPH: النوع بيتحدد من الكلاس
             SCMS.Models.User dbUser = vm.UserType switch
             {
                 "Admin" => new Admin(),
                 "Doctor" => new Doctor(),
                 "Receptionist" => new Receptionist(),
+                "Radiologist" => new Radiologist(),
                 "Patient" => new Patient(),
                 _ => new SCMS.Models.User()
             };
@@ -136,6 +173,9 @@ namespace SCMS.Controllers
         [HttpGet]
         public async Task<IActionResult> EditUser(int id)
         {
+            var guard = RequireAdmin();
+            if (guard != null) return guard;
+
             var dbUser = await _context.Users.FindAsync(id);
             if (dbUser == null) return NotFound();
 
@@ -145,6 +185,9 @@ namespace SCMS.Controllers
         [HttpPost]
         public async Task<IActionResult> EditUser(SCMS.Models.User model, string UserType)
         {
+            var guard = RequireAdmin();
+            if (guard != null) return guard;
+
             var dbUser = await _context.Users.FindAsync(model.UserId);
             if (dbUser == null) return NotFound();
 
@@ -152,7 +195,7 @@ namespace SCMS.Controllers
             dbUser.Email = model.Email;
             dbUser.Phone = model.Phone;
 
-            // تغيير نوع المستخدم إذا لزم الأمر
+            // تغيير نوع المستخدم إذا لزم الأمر (TPH)
             if (!string.IsNullOrEmpty(UserType) && dbUser.GetType().Name != UserType)
             {
                 SCMS.Models.User newUser = UserType switch
@@ -185,8 +228,5 @@ namespace SCMS.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction("Users");
         }
-       
-
-
     }
 }
