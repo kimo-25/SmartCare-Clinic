@@ -1,0 +1,24 @@
+﻿@model SCMS.ViewModels.Patient.PatientVM
+
+<link rel="stylesheet" href="~/css/clinic.css" />
+
+<div class="patient-dashboard">
+    <h2>Welcome, @Model.FullName</h2>
+
+    <div class="stats">
+        <div class="card">
+            <h4>Appointments</h4>
+            <p>@Model.AppointmentsCount</p>
+        </div>
+
+        <div class="card">
+            <h4>Prescriptions</h4>
+            <p>@Model.PrescriptionsCount</p>
+        </div>
+
+        <div class="card">
+            <h4>Medical Records</h4>
+            <p>@Model.MedicalRecordsCount</p>
+        </div>
+    </div>
+</div>

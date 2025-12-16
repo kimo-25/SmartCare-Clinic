@@ -1,0 +1,18 @@
+﻿@model SCMS.ViewModels.Patient.PatientVM
+
+<link rel="stylesheet" href="~/css/clinic.css" />
+
+<div class="patient-medical-records">
+    <h2>Medical Records</h2>
+
+    <p>Total Medical Records: <strong>@Model.MedicalRecordsCount</strong></p>
+
+    <p>
+        Detailed medical records, diagnoses, and reports are maintained by doctors.
+    </p>
+
+    <div class="summary">
+        <h4>Medical History Summary</h4>
+        <p>@Model.MedicalHistorySummary</p>
+    </div>
+</div>

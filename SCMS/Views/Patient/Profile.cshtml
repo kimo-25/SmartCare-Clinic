@@ -1,0 +1,34 @@
+﻿@model SCMS.ViewModels.Patient.PatientVM
+
+<link rel="stylesheet" href="~/css/clinic.css" />
+
+<div class="patient-profile">
+    <h2>Patient Profile</h2>
+
+    <table class="profile-table">
+        <tr>
+            <td><strong>Name</strong></td>
+            <td>@Model.FullName</td>
+        </tr>
+        <tr>
+            <td><strong>Gender</strong></td>
+            <td>@Model.Gender</td>
+        </tr>
+        <tr>
+            <td><strong>Age</strong></td>
+            <td>@Model.Age</td>
+        </tr>
+        <tr>
+            <td><strong>Date of Birth</strong></td>
+            <td>@Model.DateOfBirth.ToShortDateString()</td>
+        </tr>
+        <tr>
+            <td><strong>Address</strong></td>
+            <td>@Model.Address</td>
+        </tr>
+        <tr>
+            <td><strong>Medical History</strong></td>
+            <td>@Model.MedicalHistorySummary</td>
+        </tr>
+    </table>
+</div>

@@ -313,4 +313,35 @@ h3 {
         flex-direction: column;
         align-items: flex-start;
     }
+    .patient-dashboard,
+    .patient-profile,
+    .patient-appointments,
+    .patient-medical-records {
+        padding: 20px;
+    }
+
+    .stats {
+        display: flex;
+        gap: 20px;
+        margin-top: 20px;
+    }
+
+    .card {
+        background-color: #f4f6f8;
+        padding: 15px;
+        border-radius: 8px;
+        width: 200px;
+        text-align: center;
+    }
+
+    .profile-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .profile-table td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
 }
