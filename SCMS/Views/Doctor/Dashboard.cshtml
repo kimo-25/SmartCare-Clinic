@@ -4,65 +4,120 @@
     ViewData["Title"] = "Doctor Dashboard";
 }
 
-<!-- Unified Clinic CSS -->
-<link rel="stylesheet" href="~/css/clinic.css" />
+<div class="container mt-4 fade-in">
 
-<div class="container doctor-dashboard">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Welcome, @Model.FullName</h2>
 
-    <h1 class="page-title">Welcome, @Model.FullName</h1>
-
-    <div class="doctor-info-card">
-        <p><strong>Specialization:</strong> @Model.Specialization</p>
-        <p><strong>Department:</strong> @Model.DepartmentName</p>
-        <p><strong>Years of Experience:</strong> @Model.YearsOfExperience</p>
-        <p><strong>Phone:</strong> @Model.PhoneNumber</p>
-        <p><strong>Average Rating:</strong> @Model.AverageRate.ToString("0.0") (@Model.FeedbackCount Feedbacks)</p>
+        <span class="badge bg-primary fs-6">
+            Rating: @Model.AverageRate.ToString("0.0") (@Model.FeedbackCount Feedbacks)
+        </span>
     </div>
 
-    <div class="appointments-section">
-        <h2>Upcoming Appointments</h2>
+    <!-- Info Cards -->
+    <div class="dashboard-cards">
+        <div class="dashboard-card hover-rise">
+            <div>
+                <h4>Specialization</h4>
+                <span style="font-size:18px;font-weight:800;color:var(--text-main)">@Model.Specialization</span>
+            </div>
+            <div class="icon">🩺</div>
+        </div>
 
-        @if (!Model.UpcomingAppointments.Any())
-        {
-            <p>No upcoming appointments.</p>
-        }
-        else
-        {
-            <table class="appointments-table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Capacity</th>
-                        <th>Booked</th>
-                        <th>Remaining</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var appt in Model.UpcomingAppointments)
-                    {
+        <div class="dashboard-card hover-rise">
+            <div>
+                <h4>Department</h4>
+                <span style="font-size:18px;font-weight:800;color:var(--text-main)">@Model.DepartmentName</span>
+            </div>
+            <div class="icon">🏥</div>
+        </div>
+
+        <div class="dashboard-card hover-rise">
+            <div>
+                <h4>Years of Experience</h4>
+                <span>@Model.YearsOfExperience</span>
+            </div>
+            <div class="icon">⏳</div>
+        </div>
+    </div>
+
+    <!-- Upcoming Appointments -->
+    <div class="card hover-rise">
+        <div class="card-header soft-header d-flex justify-content-between align-items-center">
+            <span>Upcoming Appointments</span>
+
+            <div class="d-flex gap-2">
+                <a asp-action="Appointments"
+                   asp-route-doctorId="@Model.DoctorId"
+                   class="btn btn-sm btn-outline-primary">
+                    View All
+                </a>
+
+                <a asp-action="CreateAppointment"
+                   asp-route-doctorId="@Model.DoctorId"
+                   class="btn btn-sm btn-success">
+                    + Add Appointment
+                </a>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            @if (!Model.UpcomingAppointments.Any())
+            {
+                <div class="p-4 text-center text-muted">
+                    No upcoming appointments.
+                </div>
+            }
+            else
+            {
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
                         <tr>
-                            <td>@appt.AppointmentDate.ToString("dd MMM yyyy")</td>
-                            <td>@appt.StartTime.ToString(@"hh\:mm") - @appt.EndTime.ToString(@"hh\:mm")</td>
-                            <td>@appt.Capacity</td>
-                            <td>@appt.CurrentCount</td>
-                            <td>@appt.RemainingSlots</td>
-                            <td>@appt.Status</td>
-                            <td>
-                                <a asp-action="AppointmentDetails" asp-route-id="@appt.AppointmentId" class="btn primary-btn">Details</a>
-                                <a asp-action="CreatePrescription" asp-route-patientId="0" asp-route-doctorId="@Model.DoctorId" class="btn secondary-btn">New Prescription</a>
-                            </td>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Capacity</th>
+                            <th>Booked</th>
+                            <th>Remaining</th>
+                            <th>Status</th>
+                            <th style="width:220px;">Actions</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
-        }
+                    </thead>
+                    <tbody>
+                        @foreach (var appt in Model.UpcomingAppointments)
+                        {
+                            var badge = appt.Status == "Completed"
+                            ? "bg-success"
+                            : appt.Status == "Pending"
+                            ? "bg-warning text-dark"
+                            : "bg-info";
 
-        <div class="actions">
-            <a asp-action="Appointments" asp-route-doctorId="@Model.DoctorId" class="btn primary-btn">View All Appointments</a>
-            <a asp-action="CreateAppointment" asp-route-doctorId="@Model.DoctorId" class="btn secondary-btn">Add Appointment</a>
+                            <tr>
+                                <td>@appt.AppointmentDate.ToString("dd MMM yyyy")</td>
+                                <td>@appt.StartTime.ToString(@"hh\:mm") - @appt.EndTime.ToString(@"hh\:mm")</td>
+                                <td>@appt.Capacity</td>
+                                <td>@appt.CurrentCount</td>
+                                <td>@appt.RemainingSlots</td>
+                                <td><span class="badge @badge">@appt.Status</span></td>
+                                <td class="d-flex gap-2">
+                                    <a asp-action="AppointmentDetails"
+                                       asp-route-id="@appt.AppointmentId"
+                                       class="btn btn-sm btn-primary">
+                                        Details
+                                    </a>
+
+                                    <a asp-action="CreatePrescription"
+                                       asp-route-patientId="0"
+                                       asp-route-doctorId="@Model.DoctorId"
+                                       class="btn btn-sm btn-outline-primary">
+                                        New Prescription
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
         </div>
     </div>
 

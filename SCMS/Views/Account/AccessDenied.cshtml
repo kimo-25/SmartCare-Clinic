@@ -1,6 +1,6 @@
 ﻿@{
 	ViewData["Title"] = "Access Denied";
-	Layout = "_Layout";
+	Layout = "_AuthLayout";
 }
 
 
@@ -13,9 +13,6 @@
 
 
 		<div style="margin-top:30px;">
-			<a asp-controller="Home" asp-action="Index" class="btn btn-primary">
-				Go to Dashboard
-			</a>
 			<a asp-controller="Account" asp-action="Logout" class="btn btn-danger" style="margin-left:10px;">
 				Logout
 			</a>

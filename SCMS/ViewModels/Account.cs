@@ -37,7 +37,10 @@ namespace SCMS.ViewModels
             [Required, DataType(DataType.Password)]
             public string Password { get; set; } = null!;
 
-            public bool RememberMe { get; set; }
+        // ✅ ده اللي كان ناقص
+        [Required]
+        public string UserType { get; set; } = null!;
+        public bool RememberMe { get; set; }
         }
     
 

@@ -58,10 +58,17 @@ namespace SCMS.Controllers
                 .Take(6)
                 .ToListAsync();
 
+            // ✅ العدد للكارت
+            var radiologyRequestsCount = await _context.RadiologyRequests.CountAsync();
+
             var vm = new ReceptionDashboardVm
             {
                 ReceptionistName = "Receptionist",
+
                 TodaysAppointmentsCount = todaysAppointments.Count,
+                RecentPatientsCount = recentPatients.Count,
+                RadiologyRequestsCount = radiologyRequestsCount,
+
                 TodaysAppointments = todaysAppointments.Select(a => new AppointmentSummaryVm
                 {
                     AppointmentId = a.AppointmentId,
@@ -71,6 +78,7 @@ namespace SCMS.Controllers
                     PatientName = a.Bookings.FirstOrDefault()?.Patient.FullName ?? "-",
                     Status = a.Status
                 }).ToList(),
+
                 RecentPatients = recentPatients.Select(p => new PatientSummaryVm
                 {
                     PatientId = p.UserId,

@@ -1,0 +1,69 @@
+﻿.app-shell {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 280px;
+    background: #fff;
+    border-right: 1px solid rgba(0,0,0,.08);
+    padding: 18px 14px;
+}
+
+.brand {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+    .brand .logo {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: rgba(0,0,0,.06);
+    }
+
+    .brand .t1 {
+        font-weight: 800;
+    }
+
+    .brand .t2 {
+        font-size: 12px;
+        opacity: .7;
+        margin-top: -2px;
+    }
+
+.sidebar .nav-link {
+    border-radius: 12px;
+    padding: 10px 12px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    color: inherit;
+}
+.soft-header {
+    background: linear-gradient(135deg, #e3f2fd, #f1f8ff);
+    color: var(--text-main);
+    font-weight: 700;
+    border-bottom: 1px solid rgba(0,0,0,.06);
+    padding: 14px 16px;
+}
+
+    .sidebar .nav-link.active {
+        background: rgba(13,110,253,.12);
+        color: #0d6efd;
+        font-weight: 700;
+    }
+
+.content {
+    flex: 1;
+}
+
+.topbar {
+    border-bottom: 1px solid rgba(0,0,0,.08);
+}
+
+.page-container {
+    padding: 20px;
+}

@@ -12,6 +12,7 @@
         <div class="card-header bg-dark text-white">
             Requests List
         </div>
+
         <div class="card-body p-0">
             <table class="table table-hover mb-0">
                 <thead class="table-light">
@@ -22,13 +23,15 @@
                         <th>Test Name</th>
                         <th>Request Date</th>
                         <th>Status</th>
+                        <th style="width:120px;">Actions</th>
                     </tr>
                 </thead>
+
                 <tbody>
                     @if (!Model.Requests.Any())
                     {
                         <tr>
-                            <td colspan="6" class="text-center text-muted">
+                            <td colspan="7" class="text-center text-muted py-4">
                                 No radiology requests found.
                             </td>
                         </tr>
@@ -44,12 +47,25 @@
                                 <td>@r.TestName</td>
                                 <td>@r.RequestDate.ToShortDateString()</td>
                                 <td>
-                                    <span class="badge @(r.Status == "Completed" ? "bg-success" : r.Status == "Pending" ? "bg-warning text-dark" : "bg-info")">
-                                        @r.Status
-                                    </span>
-                                </td>
-                            </tr>
-                        }
+                                    <span class="badge
+                                                @(r.Status == "Completed"
+                                                                                      ? "bg-success"
+                                                                                      : r.Status == "Pending"
+                                                                                          ? "bg-warning text-dark"
+                                                                                          : "bg-info")">
+                                @r.Status
+                            </span>
+                        </td>
+                        <td>
+                            <a asp-controller="Reception"
+                               asp-action="RadiologyRequestDetails"
+                               asp-route-id="@r.RequestId"
+                               class="btn btn-sm btn-primary">
+                                Details
+                            </a>
+                        </td>
+                    </tr>
+                                        }
                     }
                 </tbody>
             </table>

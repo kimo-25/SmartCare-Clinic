@@ -7,7 +7,12 @@ namespace SCMS.ViewModels
     public class ReceptionDashboardVm
     {
         public string ReceptionistName { get; set; } = "Receptionist";
+
         public int TodaysAppointmentsCount { get; set; }
+
+        // ✅ للكروت
+        public int RecentPatientsCount { get; set; }
+        public int RadiologyRequestsCount { get; set; }
 
         public IEnumerable<AppointmentSummaryVm> TodaysAppointments { get; set; }
             = new List<AppointmentSummaryVm>();
@@ -56,14 +61,10 @@ namespace SCMS.ViewModels
     {
         public int PatientId { get; set; }
         public string FullName { get; set; } = null!;
-        public string? PatientCode { get; set; }
         public int Age { get; set; }
         public DateTime DateOfBirth { get; set; }
         public string Phone { get; set; } = null!;
         public string Address { get; set; } = null!;
-        public string? EmergencyContact { get; set; }
-        public string? PrimaryPhysician { get; set; }
-        public string? InsuranceInfo { get; set; }
         public string? Allergies { get; set; }
     }
 }

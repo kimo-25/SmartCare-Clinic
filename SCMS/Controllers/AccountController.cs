@@ -1,7 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SCMS.Models;
 using SCMS.ViewModels;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 
@@ -39,6 +42,11 @@ namespace SCMS.Controllers
             };
         }
 
+        private static string NormalizeUserType(string? s)
+        {
+            return (s ?? "").Trim();
+        }
+
         // ================= REGISTER =================
         [HttpGet]
         public IActionResult Register()
@@ -60,8 +68,8 @@ namespace SCMS.Controllers
 
             string passwordHash = HashPassword(vm.Password);
 
-            // ✅ TPH: النوع بيتحدد من الكلاس نفسه (Patient/Doctor/...)
-            SCMS.Models.User user = vm.UserType switch
+            // ✅ إنشاء المستخدم حسب النوع (TPH)
+            User user = vm.UserType switch
             {
                 "Patient" => new Patient
                 {
@@ -88,15 +96,22 @@ namespace SCMS.Controllers
                     Salary = 0
                 },
 
+                "Radiologist" => new Radiologist
+                {
+                    DepartmentName = "Radiology",
+                    PhoneNumber = vm.Phone,
+                    Salary = 0
+                },
+
                 "Admin" => new Admin
                 {
                     AccessLevel = "Full"
                 },
 
-                _ => new SCMS.Models.User()
+                _ => new User()
             };
 
-            // Common fields
+            // ===== Common fields =====
             user.FullName = vm.FullName;
             user.Email = vm.Email;
             user.Phone = vm.Phone;
@@ -131,6 +146,7 @@ namespace SCMS.Controllers
             if (!ModelState.IsValid)
                 return View(vm);
 
+            // 1) هات اليوزر
             var user = await _context.Users
                 .FirstOrDefaultAsync(u =>
                     (u.Email == vm.EmailOrUsername || u.Username == vm.EmailOrUsername)
@@ -142,16 +158,46 @@ namespace SCMS.Controllers
                 return View(vm);
             }
 
-            // ✅ النوع من Discriminator (TPH)
-            var discriminator = GetDiscriminator(user);
-            var userType = MapDiscriminatorToUserType(discriminator);
+            // 2) النوع الحقيقي من الداتا (Discriminator)
+            var discriminator = GetDiscriminator(user); // "Admin" / "Doctor" / ...
+            var realUserTypeEnum = MapDiscriminatorToUserType(discriminator);
 
-            // ✅ Save session (متسق: UserType Int)
+            // 3) النوع اللي اليوزر اختاره من الـ dropdown
+            var selected = NormalizeUserType(vm.UserType);
+
+            // ✅ هنا حل المشكلة: لازم المختار يطابق الحقيقي
+            if (!string.Equals(selected, discriminator, StringComparison.OrdinalIgnoreCase))
+            {
+                // متعملش Session ولا Cookie
+                return RedirectToAction("AccessDenied", "Account");
+            }
+
+            // 4) Session (زي ما كنت عامل)
             HttpContext.Session.SetString("UserId", user.UserId.ToString());
-            HttpContext.Session.SetInt32("UserType", (int)userType);
+            HttpContext.Session.SetInt32("UserType", (int)realUserTypeEnum);
 
-            // Redirect based on mapped enum
-            return userType switch
+            // 5) Cookie Auth (Claims)
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                new Claim(ClaimTypes.Name, user.Username ?? user.Email ?? "user"),
+                new Claim(ClaimTypes.Role, discriminator) // مهم لـ [Authorize(Roles="...")]
+            };
+
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(identity);
+
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                principal,
+                new AuthenticationProperties
+                {
+                    IsPersistent = false,
+                    ExpiresUtc = DateTimeOffset.UtcNow.AddHours(6)
+                });
+
+            // 6) Redirect حسب النوع الحقيقي
+            return realUserTypeEnum switch
             {
                 UserType.Admin => RedirectToAction("Dashboard", "Admin"),
                 UserType.Doctor => RedirectToAction("Dashboard", "Doctor"),
@@ -163,9 +209,10 @@ namespace SCMS.Controllers
         }
 
         // ================= LOGOUT =================
-        public IActionResult Logout()
+        public async Task<IActionResult> Logout()
         {
             HttpContext.Session.Clear();
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction(nameof(Login));
         }
 
@@ -201,23 +248,6 @@ namespace SCMS.Controllers
 
             return computed == stored;
         }
-
-        // ================= ACCESS DENIED =================
-        public IActionResult AccessDenied()
-        {
-            return View();
-        }
-
-        // مثال
-        public IActionResult SomeAdminPage()
-        {
-            var userType = HttpContext.Session.GetInt32("UserType");
-            if (!userType.HasValue || (UserType)userType.Value != UserType.Admin)
-                return RedirectToAction("AccessDenied", "Account");
-
-            return View();
-        }
-
         // ================= FORGOT PASSWORD =================
         [HttpGet]
         public IActionResult ForgotPassword()
@@ -226,58 +256,28 @@ namespace SCMS.Controllers
         }
 
         [HttpPost]
-        public IActionResult ForgotPassword(string EmailOrUsername)
+        public async Task<IActionResult> ForgotPassword(string EmailOrUsername)
         {
-            if (string.IsNullOrEmpty(EmailOrUsername))
+            if (string.IsNullOrWhiteSpace(EmailOrUsername))
             {
-                TempData["Message"] = "Please enter your email or username.";
+                ModelState.AddModelError("", "Please enter email or username");
                 return View();
             }
 
-            var user = _context.Users.FirstOrDefault(u => u.Email == EmailOrUsername || u.Username == EmailOrUsername);
+            var user = await _context.Users.FirstOrDefaultAsync(u =>
+                (u.Email == EmailOrUsername || u.Username == EmailOrUsername) && u.IsActive);
 
-            if (user == null)
-            {
-                TempData["Message"] = "User not found.";
-                return View();
-            }
+            // مهم: ما تكشفش إذا اليوزر موجود ولا لأ (Security)
+            TempData["Message"] = "If the account exists, reset instructions will be sent.";
 
-            return RedirectToAction("ResetPassword", new { userId = user.UserId });
+            // حالياً إنت مش عامل Email إرسال، فبنكتفي برسالة
+            return RedirectToAction(nameof(Login));
         }
 
-        // ================= RESET PASSWORD =================
-        [HttpGet]
-        public IActionResult ResetPassword(int userId)
+        // ================= ACCESS DENIED =================
+        public IActionResult AccessDenied()
         {
-            var vm = new ResetPasswordVm { UserId = userId };
-            return View(vm);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> ResetPassword(ResetPasswordVm vm)
-        {
-            if (!ModelState.IsValid)
-                return View(vm);
-
-            if (vm.NewPassword != vm.ConfirmPassword)
-            {
-                ModelState.AddModelError("", "Passwords do not match");
-                return View(vm);
-            }
-
-            var user = await _context.Users.FindAsync(vm.UserId);
-            if (user == null)
-            {
-                ModelState.AddModelError("", "User not found");
-                return View(vm);
-            }
-
-            user.PasswordHash = HashPassword(vm.NewPassword!);
-            _context.Update(user);
-            await _context.SaveChangesAsync();
-
-            TempData["Message"] = "Password reset successfully!";
-            return RedirectToAction("Login");
+            return View();
         }
     }
 }

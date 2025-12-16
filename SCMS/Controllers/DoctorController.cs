@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SCMS.Models;
 using SCMS.ViewModels;
+using System.Security.Claims;
 
 namespace SCMS.Controllers
 {
+    [Authorize(Roles = "Doctor,Admin")]
     public class DoctorController : Controller
     {
         private readonly AppDbContext _context;
@@ -16,21 +19,39 @@ namespace SCMS.Controllers
 
         private int CurrentUserId()
         {
+            // 1) Session
             var userIdStr = HttpContext.Session.GetString("UserId");
-            return int.TryParse(userIdStr, out var id) ? id : 0;
+            if (int.TryParse(userIdStr, out var id) && id > 0)
+                return id;
+
+            // 2) Claims (Cookie)
+            var claimId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            return int.TryParse(claimId, out var cid) ? cid : 0;
         }
 
         private UserType CurrentUserType()
         {
+            // 1) Session
             var t = HttpContext.Session.GetInt32("UserType");
-            return t.HasValue ? (UserType)t.Value : UserType.User;
+            if (t.HasValue) return (UserType)t.Value;
+
+            // 2) Claims Role
+            if (User.IsInRole("Admin")) return UserType.Admin;
+            if (User.IsInRole("Doctor")) return UserType.Doctor;
+
+            return UserType.User;
         }
 
         private IActionResult RequireDoctor()
         {
+            // لو مش مسجل دخول (حتى مع Authorize، احتياط)
+            if (!(User?.Identity?.IsAuthenticated ?? false))
+                return RedirectToAction("Login", "Account");
+
             var userId = CurrentUserId();
             if (userId == 0) return RedirectToAction("Login", "Account");
 
+            // انت كنت سامح Admin يدخل هنا — خليتها زي ما هي
             if (CurrentUserType() != UserType.Doctor && CurrentUserType() != UserType.Admin)
                 return RedirectToAction("AccessDenied", "Account");
 

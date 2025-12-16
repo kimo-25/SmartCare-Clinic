@@ -4,18 +4,45 @@
     ViewData["Title"] = "Reception Dashboard";
 }
 
-<div class="container mt-4">
+<div class="container mt-4 fade-in">
 
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Welcome, @Model.ReceptionistName 👋</h2>
+        <h2 class="mb-0">Welcome, @Model.ReceptionistName</h2>
         <span class="badge bg-primary fs-6">
             Today's Appointments: @Model.TodaysAppointmentsCount
         </span>
     </div>
 
+    <!-- Dashboard Cards -->
+    <div class="dashboard-cards">
+        <div class="dashboard-card hover-rise">
+            <div>
+                <h4>Today's Appointments</h4>
+                <span>@Model.TodaysAppointmentsCount</span>
+            </div>
+            <div class="icon">📅</div>
+        </div>
+
+        <div class="dashboard-card hover-rise">
+            <div>
+                <h4>Recent Patients</h4>
+                <span>@Model.RecentPatientsCount</span>
+            </div>
+            <div class="icon">👥</div>
+        </div>
+
+        <div class="dashboard-card hover-rise">
+            <div>
+                <h4>Radiology Requests</h4>
+                <span>@Model.RadiologyRequestsCount</span>
+            </div>
+            <div class="icon">🩻</div>
+        </div>
+    </div>
+
     <!-- Today's Appointments -->
-    <div class="card mb-4">
+    <div class="card mb-4 hover-rise">
         <div class="card-header bg-dark text-white">
             Today's Appointments
         </div>
@@ -34,7 +61,7 @@
                     @if (!Model.TodaysAppointments.Any())
                     {
                         <tr>
-                            <td colspan="5" class="text-center text-muted">
+                            <td colspan="5" class="text-center text-muted py-4">
                                 No appointments today
                             </td>
                         </tr>
@@ -43,15 +70,19 @@
                     {
                         foreach (var item in Model.TodaysAppointments)
                         {
+                            var badge = item.Status == "Completed"
+                            ? "bg-success"
+                            : item.Status == "Pending"
+                            ? "bg-warning text-dark"
+                            : "bg-info";
+
                             <tr>
                                 <td>@item.AppointmentDate.ToShortDateString()</td>
                                 <td>@item.StartTime</td>
                                 <td>@item.DoctorName</td>
                                 <td>@item.PatientName</td>
                                 <td>
-                                    <span class="badge bg-info">
-                                        @item.Status
-                                    </span>
+                                    <span class="badge @badge">@item.Status</span>
                                 </td>
                             </tr>
                         }
@@ -62,7 +93,7 @@
     </div>
 
     <!-- Recent Patients -->
-    <div class="card">
+    <div class="card hover-rise">
         <div class="card-header bg-secondary text-white">
             Recently Added Patients
         </div>
@@ -80,7 +111,7 @@
                     @if (!Model.RecentPatients.Any())
                     {
                         <tr>
-                            <td colspan="4" class="text-center text-muted">
+                            <td colspan="4" class="text-center text-muted py-4">
                                 No recent patients
                             </td>
                         </tr>
@@ -93,11 +124,7 @@
                                 <td>@p.FullName</td>
                                 <td>@p.Age</td>
                                 <td>@p.Phone</td>
-                                <td>
-                                    @(p.LastVisit.HasValue 
-                                        ? p.LastVisit.Value.ToShortDateString() 
-                                        : "-")
-                                </td>
+                                <td>@(p.LastVisit.HasValue? p.LastVisit.Value.ToShortDateString() : "-")</td>
                             </tr>
                         }
                     }

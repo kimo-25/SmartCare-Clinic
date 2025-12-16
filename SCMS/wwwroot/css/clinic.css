@@ -1,28 +1,26 @@
 ﻿/* ==============================
    Smart Clinic Management System
-   Unified Design System (CSS)
-   Author: Unified UI Style
+   Unified Design System (Refined)
    ============================== */
 
 /* ===== Root Variables ===== */
-
 :root {
-    --primary: #1e88e5; /* Main blue */
+    --primary: #1e88e5;
     --primary-dark: #1565c0;
-    --secondary: #26a69a; /* Teal */
+    --secondary: #26a69a;
     --success: #2e7d32;
     --danger: #c62828;
     --warning: #f9a825;
-    --bg: #f4f6f8;
+    --bg: #eef5fb; /* خلفية أهدى */
     --card-bg: #ffffff;
     --text-main: #263238;
     --text-muted: #607d8b;
     --border: #e0e0e0;
-    --radius: 10px;
-    --shadow: 0 4px 12px rgba(0,0,0,0.08);
+    --radius: 12px;
+    --shadow: 0 6px 18px rgba(0,0,0,0.08);
 }
 
-/* ===== Global Reset ===== */
+/* ===== Reset ===== */
 * {
     margin: 0;
     padding: 0;
@@ -36,136 +34,155 @@ body {
     line-height: 1.6;
 }
 
-/* ===== Layout ===== */
+/* ===== Containers ===== */
 .container {
-    width: 90%;
+    width: 92%;
     max-width: 1200px;
     margin: auto;
 }
 
+/* ===== Layout Shell (Layout.cshtml) ===== */
+.app-shell {
+    display: flex;
+    min-height: 100vh;
+}
+
+.content {
+    flex: 1;
+    min-width: 0;
+}
+
+.page-container {
+    padding: 22px;
+}
+
+/* ===== Cards ===== */
 .card {
     background: var(--card-bg);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
-    padding: 20px;
-    margin-bottom: 20px;
+    padding: 24px;
+    margin-bottom: 24px;
 }
 
-/* ===== Header / Navbar ===== */
-/* ===== Header / Navbar ===== */
-/* ===== Header / Navbar - Sky Brown Theme ===== */
-/* ===== Header / Navbar - Sky Theme ===== */
-/* ===== Header / Navbar - Enhanced Sky Theme ===== */
+/* ===== Headings ===== */
+h1, h2, h3 {
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+h2 {
+    font-size: 26px;
+}
+
+h3 {
+    font-size: 20px;
+    color: var(--text-muted);
+}
+
+/* ===== Navbar (Top) ===== */
 .navbar {
-    background: #87ceeb; /* Sky Blue */
+    background: linear-gradient(135deg, #6ec6ff, #90caf9);
     color: #fff;
-    padding: 15px 40px;
+    padding: 14px 36px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 2px solid #6aa6d6; /* أغمق شوي للخط السفلي */
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.12);
     position: sticky;
     top: 0;
     z-index: 1000;
-    font-family: "Segoe UI", Tahoma, Arial, sans-serif;
 }
-
-    .navbar h1 {
-        font-size: 26px;
-        font-weight: 700;
-        margin: 0;
-        letter-spacing: 1px;
-        color: #fff;
-    }
-
-    .navbar a {
-        color: #ffffff;
-        margin-left: 20px;
-        text-decoration: none;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        padding: 8px 12px;
-        border-radius: var(--radius);
-        box-shadow: inset 0 0 0 0 rgba(255,255,255,0);
-    }
-
-        .navbar a:hover {
-            color: #87ceeb; /* نص Sky Blue عند hover */
-            background: #ffffff; /* خلفية بيضاء */
-            transform: scale(1.08);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-        }
 
     .navbar .navbar-brand {
-        font-size: 28px;
+        font-size: 26px;
         font-weight: 800;
-        color: #000; /* أسود */
+        color: #0d1b2a;
         text-decoration: none;
-        letter-spacing: 1px;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
     }
 
-
-.navbar-toggler {
-    border: none;
-    outline: none;
-}
-
-.navbar-toggler-icon {
-    background-color: #fff;
-}
-
-/* ===== Responsive Navbar ===== */
-@media (max-width: 768px) {
-    .navbar {
-        flex-direction: column;
-        align-items: flex-start;
-        padding: 15px 20px;
+    .navbar a.nav-link {
+        color: #0d1b2a;
+        margin-left: 18px;
+        text-decoration: none;
+        font-weight: 600;
+        padding: 6px 12px;
+        border-radius: var(--radius);
+        transition: all .25s ease;
     }
 
-        .navbar a {
-            margin: 10px 0 0 0;
+        /* ✅ ألغينا transform عشان ما يحصلش "نتش" */
+        .navbar a.nav-link:hover {
+            background: rgba(255,255,255,0.85);
+            transform: none;
         }
-}
 
-/* ===== Optional: Background page for contrast ===== */
-body {
-    background-color: #e0f7ff; /* فاتح Sky Blue للخلفية */
-}
-
+    /* ✅ زرار اللوج آوت (Bootstrap button) */
+    .navbar .btn {
+        border-radius: 14px !important;
+    }
 
 /* ===== Sidebar ===== */
 .sidebar {
-    width: 240px;
-    background: #fff;
+    width: 260px;
+    background: #ffffff;
     min-height: 100vh;
     box-shadow: var(--shadow);
-    padding: 20px;
+    padding: 22px 16px;
 }
 
-    .sidebar a {
-        display: block;
-        padding: 12px 15px;
-        margin-bottom: 8px;
-        color: var(--text-main);
-        text-decoration: none;
-        border-radius: var(--radius);
+.brand {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+    .brand .logo {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: rgba(0,0,0,.06);
     }
 
-        .sidebar a.active,
-        .sidebar a:hover {
-            background: var(--primary);
-            color: #fff;
-        }
+    .brand .t1 {
+        font-weight: 800;
+    }
+
+    .brand .t2 {
+        font-size: 12px;
+        opacity: .7;
+        margin-top: -2px;
+    }
+
+.sidebar a.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    color: var(--text-main);
+    text-decoration: none;
+    border-radius: var(--radius);
+    font-weight: 600;
+    transition: all .25s ease;
+}
+
+    .sidebar a.nav-link.active,
+    .sidebar a.nav-link:hover {
+        background: var(--primary);
+        color: #fff;
+    }
 
 /* ===== Buttons ===== */
 .btn {
-    padding: 10px 18px;
+    padding: 10px 22px;
     border: none;
-    border-radius: var(--radius);
+    border-radius: 30px;
     cursor: pointer;
     font-size: 14px;
+    font-weight: 600;
+    transition: all .25s ease;
 }
 
 .btn-primary {
@@ -175,46 +192,28 @@ body {
 
     .btn-primary:hover {
         background: var(--primary-dark);
+        transform: translateY(-1px);
     }
 
-.btn-success {
-    background: var(--success);
-    color: #fff;
+.btn-outline {
+    background: transparent;
+    border: 2px solid var(--primary);
+    color: var(--primary);
 }
 
-.btn-danger {
-    background: var(--danger);
-    color: #fff;
-}
-
-.btn-warning {
-    background: var(--warning);
-    color: #000;
-}
-
-/* ===== Forms ===== */
-form label {
-    display: block;
-    margin-bottom: 6px;
-    font-weight: 500;
-}
-
-form input,
-form select,
-form textarea {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-}
-
-    form input:focus,
-    form select:focus,
-    form textarea:focus {
-        outline: none;
-        border-color: var(--primary);
+    .btn-outline:hover {
+        background: var(--primary);
+        color: #fff;
     }
+
+/* ===== Soft Header (for cards header like "Upcoming Appointments") ===== */
+.soft-header {
+    background: linear-gradient(135deg, #e3f2fd, #f1f8ff);
+    color: var(--text-main);
+    font-weight: 800;
+    border-bottom: 1px solid rgba(0,0,0,.06);
+    padding: 14px 16px;
+}
 
 /* ===== Tables ===== */
 .table {
@@ -224,35 +223,30 @@ form textarea {
 
     .table th,
     .table td {
-        padding: 12px 15px;
+        padding: 14px 16px;
         border-bottom: 1px solid var(--border);
-        text-align: left;
     }
 
     .table th {
-        background: #f1f3f5;
+        background: #f3f6fa;
+        font-weight: 700;
     }
 
     .table tr:hover {
-        background: #f9fbfd;
+        background: #f9fbff;
     }
 
-/* ===== Status Badges ===== */
+/* ===== Badges ===== */
 .badge {
-    padding: 5px 10px;
+    padding: 6px 14px;
     border-radius: 20px;
     font-size: 12px;
-    font-weight: bold;
+    font-weight: 700;
 }
 
 .badge-success {
     background: #e8f5e9;
     color: var(--success);
-}
-
-.badge-danger {
-    background: #ffebee;
-    color: var(--danger);
 }
 
 .badge-warning {
@@ -261,34 +255,48 @@ form textarea {
 }
 
 /* ===== Dashboard Cards ===== */
-.stat {
+.dashboard-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.dashboard-card {
+    background: linear-gradient(135deg, #ffffff, #f6f9ff);
+    border-radius: 16px;
+    padding: 22px;
+    box-shadow: var(--shadow);
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-    .stat h3 {
-        font-size: 18px;
+    .dashboard-card h4 {
+        font-size: 14px;
         color: var(--text-muted);
+        margin-bottom: 6px;
     }
 
-    .stat span {
-        font-size: 28px;
-        font-weight: bold;
+    .dashboard-card span {
+        font-size: 32px;
+        font-weight: 800;
+        color: var(--primary);
+    }
+
+    .dashboard-card .icon {
+        font-size: 34px;
+        opacity: .2;
     }
 
 /* ===== Footer ===== */
 .footer {
     background: #0d1b2a;
     color: #e0e0e0;
-    padding: 25px 20px;
+    padding: 22px;
     text-align: center;
-    font-size: 15px;
-    border-top: 1px solid rgba(255,255,255,0.1);
-    backdrop-filter: blur(4px);
+    font-size: 14px;
 }
-
-    
 
 /* ===== Responsive ===== */
 @media (max-width: 768px) {
@@ -298,6 +306,11 @@ form textarea {
     }
 
     .container {
-        width: 95%;
+        width: 96%;
+    }
+
+    .navbar {
+        flex-direction: column;
+        align-items: flex-start;
     }
 }

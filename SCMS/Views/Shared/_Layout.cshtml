@@ -1,4 +1,14 @@
-﻿<!DOCTYPE html>
+﻿@using SCMS.Models
+@{
+    var userType = Context.Session.GetInt32("UserType");
+    var isLoggedIn = Context.Session.GetString("UserId") != null;
+
+    var currentController = ViewContext.RouteData.Values["Controller"]?.ToString() ?? "";
+    var currentAction = ViewContext.RouteData.Values["Action"]?.ToString() ?? "";
+    string Active(string c, string a) => (currentController == c && currentAction == a) ? "active" : "";
+}
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -8,48 +18,112 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/clinic.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/SCMS.styles.css" asp-append-version="true" />
+
+    <!-- ✅ Sidebar/Layout CSS -->
+    <link rel="stylesheet" href="~/css/sidebar.css" asp-append-version="true" />
+
+    @RenderSection("Styles", required: false)
 </head>
+
 <body>
+    <div class="app-shell">
 
-    <!-- ===== Navbar ===== -->
-    <nav class="navbar navbar-expand-sm">
-        <div class="container-fluid">
-            <a class="navbar-brand" asp-controller="Home" asp-action="Index">SCMS</a>
-
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" asp-controller="Home" asp-action="Index">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                    </li>
-                </ul>
+        <!-- ===== Sidebar ===== -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="logo"></div>
+                <div>
+                    <div class="t1">SmartCare</div>
+                    <div class="t2">Clinic System</div>
+                </div>
             </div>
-        </div>
-    </nav>
 
-    <!-- ===== Page Wrapper ===== -->
-    <div class="page-wrapper">
+            <ul class="nav flex-column">
+
+                @* Receptionist Menu *@
+                @if (userType == (int)UserType.Receptionist || userType == (int)UserType.Admin)
+                {
+                    <li class="nav-item">
+                        <a class="nav-link @Active("Reception", "Dashboard")"
+                           asp-controller="Reception" asp-action="Dashboard">
+                            <span>📊</span> <span>Dashboard</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link @Active("Reception", "Appointments")"
+                           asp-controller="Reception" asp-action="Appointments">
+                            <span>📅</span> <span>Appointments</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link @Active("Reception", "Patients")"
+                           asp-controller="Reception" asp-action="Patients">
+                            <span>👥</span> <span>Patients</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link @Active("Reception", "RadiologyRequests")"
+                           asp-controller="Reception" asp-action="RadiologyRequests">
+                            <span>🩻</span> <span>Radiology Requests</span>
+                        </a>
+                    </li>
+                }
+
+                @* TODO: Doctor Menu / Radiologist Menu / Admin Menu ... *@
+            </ul>
+        </aside>
 
         <!-- ===== Main Content ===== -->
-        <div class="main-content">
-            <div class="container mt-4">
+        <main class="content">
+
+            <!-- Top Navbar -->
+            <nav class="navbar navbar-expand-sm topbar">
+                <div class="container-fluid">
+                    <a class="navbar-brand" asp-controller="Home" asp-action="Index">SCMS</a>
+
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#navbarNav">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <ul class="navbar-nav ms-auto align-items-center">
+                            @if (isLoggedIn)
+                            {
+                                <li class="nav-item">
+                                    <a class="btn btn-outline-danger btn-sm"
+                                       asp-controller="Account"
+                                       asp-action="Logout">
+                                        Logout
+                                    </a>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link"
+                                       asp-controller="Account"
+                                       asp-action="Login">
+                                        Login
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="page-container">
                 @RenderBody()
             </div>
-        </div>
 
-        <!-- ===== Footer ===== -->
-      
+        </main>
     </div>
-    
 
-    <!-- ===== Scripts ===== -->
+    <!-- Scripts -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
