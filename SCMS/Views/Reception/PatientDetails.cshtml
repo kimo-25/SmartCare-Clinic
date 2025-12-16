@@ -9,32 +9,33 @@
 
     <h2 class="mb-4">Patient Profile 🩺</h2>
 
-    <!-- Header Card -->
+    <!-- لو الهيدر مش موجود، اعرض من الـ Model -->
     <div class="card mb-4">
         <div class="card-header bg-dark text-white">
             Patient Information
         </div>
         <div class="card-body">
-            <div class="row">
-                <div class="col-md-6 mb-2">
-                    <strong>Name:</strong> @header!.FullName
+            @if (header != null)
+            {
+                <div class="row">
+                    <div class="col-md-6 mb-2"><strong>Name:</strong> @header.FullName</div>
+                    <div class="col-md-3 mb-2"><strong>Age:</strong> @header.Age</div>
+                    <div class="col-md-3 mb-2"><strong>DOB:</strong> @header.DateOfBirth.ToShortDateString()</div>
+                    <div class="col-md-6 mb-2"><strong>Phone:</strong> @header.Phone</div>
+                    <div class="col-md-6 mb-2"><strong>Address:</strong> @header.Address</div>
+                    <div class="col-md-12 mb-2"><strong>Medical Summary:</strong> @(header.Allergies ?? "-")</div>
                 </div>
-                <div class="col-md-3 mb-2">
-                    <strong>Age:</strong> @header.Age
+            }
+            else
+            {
+                <div class="row">
+                    <div class="col-md-6 mb-2"><strong>Name:</strong> @Model.FullName</div>
+                    <div class="col-md-3 mb-2"><strong>Age:</strong> @Model.Age</div>
+                    <div class="col-md-3 mb-2"><strong>Gender:</strong> @Model.Gender</div>
+                    <div class="col-md-12 mb-2"><strong>Address:</strong> @Model.Address</div>
+                    <div class="col-md-12 mb-2"><strong>Medical Summary:</strong> @(Model.MedicalHistorySummary ?? "-")</div>
                 </div>
-                <div class="col-md-3 mb-2">
-                    <strong>DOB:</strong> @header.DateOfBirth.ToShortDateString()
-                </div>
-                <div class="col-md-6 mb-2">
-                    <strong>Phone:</strong> @header.Phone
-                </div>
-                <div class="col-md-6 mb-2">
-                    <strong>Address:</strong> @header.Address
-                </div>
-                <div class="col-md-12 mb-2">
-                    <strong>Allergies / Medical Summary:</strong> @header.Allergies ?? "-"
-                </div>
-            </div>
+            }
         </div>
     </div>
 
@@ -56,7 +57,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @if (!Model.Records.Any())
+                    @if (Model.Records == null || !Model.Records.Any())
                     {
                         <tr>
                             <td colspan="6" class="text-center text-muted">
@@ -70,12 +71,12 @@
                         {
                             <tr>
                                 <td>@r.RecordDate.ToShortDateString()</td>
-                                <td>@r.Description</td>
-                                <td>@r.Diagnosis ?? "-"</td>
-                                <td>@r.Treatment ?? "-"</td>
-                                <td>@r.RadiologyTestName ?? "-"</td>
+                                <td>@(r.Description ?? "-")</td>
+                                <td>@(r.Diagnosis ?? "-")</td>
+                                <td>@(r.Treatment ?? "-")</td>
+                                <td>@(r.RadiologyTestName ?? "-")</td>
                                 <td>
-                                    @if (!string.IsNullOrEmpty(r.RadiologyStatus))
+                                    @if (!string.IsNullOrWhiteSpace(r.RadiologyStatus))
                                     {
                                         <span class="badge @(r.RadiologyStatus == "Completed" ? "bg-success" : r.RadiologyStatus == "Pending" ? "bg-warning text-dark" : "bg-info")">
                                             @r.RadiologyStatus
@@ -92,6 +93,10 @@
                 </tbody>
             </table>
         </div>
+    </div>
+
+    <div class="mt-3">
+        <a asp-controller="Reception" asp-action="Patients" class="btn btn-secondary">Back</a>
     </div>
 
 </div>

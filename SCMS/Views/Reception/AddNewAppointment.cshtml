@@ -1,0 +1,58 @@
+﻿@{
+    ViewData["Title"] = "Add New Appointment";
+    var doctors = ViewBag.Doctors;
+    var patients = ViewBag.Patients;
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Add New Appointment ➕</h2>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">
+            Appointment Information
+        </div>
+
+        <div class="card-body">
+            <form asp-controller="Reception" asp-action="AddNewAppointment" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="mb-3">
+                    <label class="form-label">Doctor</label>
+                    <select name="doctorId" class="form-select" required>
+                        <option value="">Select Doctor</option>
+                        @foreach (var d in doctors)
+                        {
+                            <option value="@d.UserId">@d.FullName</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Patient (Optional)</label>
+                    <select name="patientId" class="form-select">
+                        <option value="">-- No Patient (Available) --</option>
+                        @foreach (var p in patients)
+                        {
+                            <option value="@p.UserId">@p.FullName</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Date</label>
+                    <input type="date" name="appointmentDate" class="form-control" required />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Start Time</label>
+                    <input type="time" name="startTime" class="form-control" required />
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="submit" class="btn btn-success">Save</button>
+                    <a asp-controller="Reception" asp-action="Appointments" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

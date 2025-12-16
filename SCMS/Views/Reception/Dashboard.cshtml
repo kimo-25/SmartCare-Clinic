@@ -2,135 +2,165 @@
 
 @{
     ViewData["Title"] = "Reception Dashboard";
+
+    var recentPatientsCount = Model.RecentPatients?.Count() ?? 0;
+    var radiologyRequestsCount = (int)(ViewBag.RadiologyRequestsCount ?? 0);
 }
 
-<div class="container mt-4 fade-in">
+<div class="container mt-4">
 
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0">Welcome, @Model.ReceptionistName</h2>
-        <span class="badge bg-primary fs-6">
-            Today's Appointments: @Model.TodaysAppointmentsCount
-        </span>
+        <h2>Welcome, @Model.ReceptionistName</h2>
+
+        <!-- ✅ زرار إضافة موعد يفتح الصفحة الجديدة -->
+        <a asp-controller="Reception"
+           asp-action="AddNewAppointment"
+           class="btn btn-success">
+            ➕ Add Appointment
+        </a>
     </div>
 
-    <!-- Dashboard Cards -->
-    <div class="dashboard-cards">
-        <div class="dashboard-card hover-rise">
-            <div>
-                <h4>Today's Appointments</h4>
-                <span>@Model.TodaysAppointmentsCount</span>
+    <!-- Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5>Today's Appointments</h5>
+                    <h2>@Model.TodaysAppointmentsCount</h2>
+                </div>
             </div>
-            <div class="icon">📅</div>
         </div>
 
-        <div class="dashboard-card hover-rise">
-            <div>
-                <h4>Recent Patients</h4>
-                <span>@Model.RecentPatientsCount</span>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5>Recent Patients</h5>
+                    <h2>@recentPatientsCount</h2>
+                </div>
             </div>
-            <div class="icon">👥</div>
         </div>
 
-        <div class="dashboard-card hover-rise">
-            <div>
-                <h4>Radiology Requests</h4>
-                <span>@Model.RadiologyRequestsCount</span>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5>Radiology Requests</h5>
+                    <h2>@radiologyRequestsCount</h2>
+                </div>
             </div>
-            <div class="icon">🩻</div>
         </div>
     </div>
 
     <!-- Today's Appointments -->
-    <div class="card mb-4 hover-rise">
-        <div class="card-header bg-dark text-white">
-            Today's Appointments
-        </div>
-        <div class="card-body p-0">
-            <table class="table table-striped mb-0">
-                <thead class="table-light">
+    <div class="card mb-4">
+        <div class="card-header">Today's Appointments</div>
+
+        <table class="table table-striped mb-0">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Doctor</th>
+                    <th>Patient</th>
+                    <th>Status</th>
+                    <th style="width:160px;">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model.TodaysAppointments == null || !Model.TodaysAppointments.Any())
+                {
                     <tr>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Doctor</th>
-                        <th>Patient</th>
-                        <th>Status</th>
+                        <td colspan="6" class="text-center text-muted">No appointments today.</td>
                     </tr>
-                </thead>
-                <tbody>
-                    @if (!Model.TodaysAppointments.Any())
+                }
+                else
+                {
+                    foreach (var item in Model.TodaysAppointments)
                     {
                         <tr>
-                            <td colspan="5" class="text-center text-muted py-4">
-                                No appointments today
+                            <td>@item.AppointmentDate.ToShortDateString()</td>
+                            <td>@item.StartTime</td>
+                            <td>@item.DoctorName</td>
+                            <td>@item.PatientName</td>
+                            <td>@item.Status</td>
+                            <td>
+                                <!-- ✅ الأزرار جنب بعض -->
+                                <div class="d-flex align-items-center gap-2">
+                                    <a asp-controller="Reception"
+                                       asp-action="EditAppointment"
+                                       asp-route-id="@item.AppointmentId"
+                                       class="btn btn-sm btn-warning">✏</a>
+
+                                    <form asp-controller="Reception"
+                                          asp-action="DeleteAppointment"
+                                          asp-route-id="@item.AppointmentId"
+                                          method="post" class="m-0">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit"
+                                                class="btn btn-sm btn-danger"
+                                                onclick="return confirm('Delete appointment?');">
+                                            🗑
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     }
-                    else
-                    {
-                        foreach (var item in Model.TodaysAppointments)
-                        {
-                            var badge = item.Status == "Completed"
-                            ? "bg-success"
-                            : item.Status == "Pending"
-                            ? "bg-warning text-dark"
-                            : "bg-info";
-
-                            <tr>
-                                <td>@item.AppointmentDate.ToShortDateString()</td>
-                                <td>@item.StartTime</td>
-                                <td>@item.DoctorName</td>
-                                <td>@item.PatientName</td>
-                                <td>
-                                    <span class="badge @badge">@item.Status</span>
-                                </td>
-                            </tr>
-                        }
-                    }
-                </tbody>
-            </table>
-        </div>
+                }
+            </tbody>
+        </table>
     </div>
 
     <!-- Recent Patients -->
-    <div class="card hover-rise">
-        <div class="card-header bg-secondary text-white">
-            Recently Added Patients
-        </div>
-        <div class="card-body p-0">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
+    <div class="card">
+        <div class="card-header">Recent Patients</div>
+
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Age</th>
+                    <th>Phone</th>
+                    <th>Last Visit</th>
+                    <th style="width:160px;">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model.RecentPatients == null || !Model.RecentPatients.Any())
+                {
                     <tr>
-                        <th>Name</th>
-                        <th>Age</th>
-                        <th>Phone</th>
-                        <th>Last Visit</th>
+                        <td colspan="5" class="text-center text-muted">No recent patients.</td>
                     </tr>
-                </thead>
-                <tbody>
-                    @if (!Model.RecentPatients.Any())
+                }
+                else
+                {
+                    foreach (var p in Model.RecentPatients)
                     {
                         <tr>
-                            <td colspan="4" class="text-center text-muted py-4">
-                                No recent patients
+                            <td>@p.FullName</td>
+                            <td>@p.Age</td>
+                            <td>@p.Phone</td>
+                            <td>@(p.LastVisit?.ToShortDateString() ?? "-")</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <a asp-controller="Reception"
+                                       asp-action="PatientDetails"
+                                       asp-route-id="@p.PatientId"
+                                       class="btn btn-sm btn-info">👁</a>
+
+                                    <a asp-controller="Reception"
+                                       asp-action="EditPatient"
+                                       asp-route-id="@p.PatientId"
+                                       class="btn btn-sm btn-warning">✏</a>
+                                </div>
                             </td>
                         </tr>
                     }
-                    else
-                    {
-                        foreach (var p in Model.RecentPatients)
-                        {
-                            <tr>
-                                <td>@p.FullName</td>
-                                <td>@p.Age</td>
-                                <td>@p.Phone</td>
-                                <td>@(p.LastVisit.HasValue? p.LastVisit.Value.ToShortDateString() : "-")</td>
-                            </tr>
-                        }
-                    }
-                </tbody>
-            </table>
-        </div>
+                }
+            </tbody>
+        </table>
     </div>
 
 </div>

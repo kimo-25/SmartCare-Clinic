@@ -6,7 +6,15 @@
 
 <div class="container mt-4">
 
-    <h2 class="mb-4">All Appointments 📅</h2>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">All Appointments 📅</h2>
+
+        <a asp-controller="Reception"
+           asp-action="AddNewAppointment"
+           class="btn btn-success">
+            ➕ Add New Appointment
+        </a>
+    </div>
 
     <div class="card">
         <div class="card-header bg-dark text-white">
@@ -21,13 +29,14 @@
                         <th>Doctor</th>
                         <th>Patient</th>
                         <th>Status</th>
+                        <th style="width:140px;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @if (!Model.Any())
+                    @if (Model == null || !Model.Any())
                     {
                         <tr>
-                            <td colspan="5" class="text-center text-muted">
+                            <td colspan="6" class="text-center text-muted">
                                 No appointments found.
                             </td>
                         </tr>
@@ -45,6 +54,26 @@
                                     <span class="badge @(a.Status == "Completed" ? "bg-success" : a.Status == "Cancelled" ? "bg-danger" : "bg-info")">
                                         @a.Status
                                     </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <a asp-controller="Reception"
+                                           asp-action="EditAppointment"
+                                           asp-route-id="@a.AppointmentId"
+                                           class="btn btn-sm btn-warning">✏</a>
+
+                                        <form asp-controller="Reception"
+                                              asp-action="DeleteAppointment"
+                                              asp-route-id="@a.AppointmentId"
+                                              method="post" class="m-0">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-danger"
+                                                    onclick="return confirm('Delete appointment?');">
+                                                🗑
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         }

@@ -1,45 +1,60 @@
 ﻿@model SCMS.ViewModels.PatientFormVm
 
 @{
-    ViewData["Title"] = Model.PatientId.HasValue ? "Edit Patient" : "Add Patient";
+    bool isEdit = Model.PatientId > 0;
+    ViewData["Title"] = isEdit ? "Edit Patient" : "Add Patient";
 }
 
 <div class="container mt-4">
 
     <h2 class="mb-4">
-        @(Model.PatientId.HasValue ? "Edit Patient 📝" : "Add New Patient ➕")
+        @(isEdit ? "Edit Patient 📝" : "Add New Patient ➕")
     </h2>
 
-    <div class="card">
+    <div class="card shadow-sm">
         <div class="card-header bg-dark text-white">
             Patient Information
         </div>
+
         <div class="card-body">
 
-            <form asp-action="SavePatient" method="post">
-                @if (Model.PatientId.HasValue)
+            <form asp-controller="Reception"
+                  asp-action="@(isEdit ? "EditPatient" : "CreatePatient")"
+                  method="post">
+
+                @Html.AntiForgeryToken()
+
+                <!-- Validation Errors -->
+                <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                @* Hidden ID for Edit *@
+                @if (isEdit)
                 {
                     <input type="hidden" asp-for="PatientId" />
                 }
 
+                <!-- Full Name -->
                 <div class="mb-3">
                     <label asp-for="FullName" class="form-label"></label>
                     <input asp-for="FullName" class="form-control" />
                     <span asp-validation-for="FullName" class="text-danger"></span>
                 </div>
 
+                <!-- Phone -->
                 <div class="mb-3">
                     <label asp-for="Phone" class="form-label"></label>
                     <input asp-for="Phone" class="form-control" />
                     <span asp-validation-for="Phone" class="text-danger"></span>
                 </div>
 
+                <!-- Email -->
                 <div class="mb-3">
                     <label asp-for="Email" class="form-label"></label>
                     <input asp-for="Email" class="form-control" />
                     <span asp-validation-for="Email" class="text-danger"></span>
                 </div>
 
+                <!-- Gender -->
                 <div class="mb-3">
                     <label asp-for="Gender" class="form-label"></label>
                     <select asp-for="Gender" class="form-select">
@@ -51,33 +66,45 @@
                     <span asp-validation-for="Gender" class="text-danger"></span>
                 </div>
 
+                <!-- Date Of Birth -->
                 <div class="mb-3">
                     <label asp-for="DateOfBirth" class="form-label"></label>
-                    <input asp-for="DateOfBirth" class="form-control" type="date" />
+                    <input asp-for="DateOfBirth" type="date" class="form-control" />
                     <span asp-validation-for="DateOfBirth" class="text-danger"></span>
                 </div>
 
+                <!-- Address -->
                 <div class="mb-3">
                     <label asp-for="Address" class="form-label"></label>
-                    <input asp-for="Address" class="form-control" />
+                    <textarea asp-for="Address" class="form-control" rows="2"></textarea>
                     <span asp-validation-for="Address" class="text-danger"></span>
                 </div>
 
+                <!-- Medical History -->
                 <div class="mb-3">
                     <label asp-for="MedicalHistorySummary" class="form-label"></label>
-                    <textarea asp-for="MedicalHistorySummary" class="form-control" rows="4"></textarea>
-                    <span asp-validation-for="MedicalHistorySummary" class="text-danger"></span>
+                    <textarea asp-for="MedicalHistorySummary"
+                              class="form-control"
+                              rows="3"></textarea>
                 </div>
 
-                <button type="submit" class="btn btn-success">
-                    @(Model.PatientId.HasValue ? "Update Patient" : "Add Patient")
-                </button>
-                <a asp-action="Patients" class="btn btn-secondary ms-2">Cancel</a>
+                <!-- Buttons -->
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="submit" class="btn btn-success">
+                        @(isEdit ? "Update Patient" : "Save Patient")
+                    </button>
+
+                    <a asp-controller="Reception"
+                       asp-action="Patients"
+                       class="btn btn-secondary">
+                        Cancel
+                    </a>
+                </div>
+
             </form>
 
         </div>
     </div>
-
 </div>
 
 @section Scripts {

@@ -1,6 +1,7 @@
-﻿@model SCMS.ViewModels.Patient.PatientVM
+@model SCMS.ViewModels.Patient.PatientVM
 
 <div class="patient-dashboard">
+    <h2>Welcome, @Model.FullName</h2>
 
     <!-- ===== Dashboard Header ===== -->
     <div class="dashboard-header">
@@ -19,7 +20,7 @@
         {
             <div class="profile-alert">
                 <strong>⚠️ Attention:</strong>
-                Please Complete Your Informatin
+                Please Complete Your Information
 
                 <a asp-controller="Patient"
                    asp-action="Edit"
@@ -29,7 +30,7 @@
                 </a>
             </div>
         }
-    </div> <!-- ✅ مهم: قفل dashboard-header -->
+    </div>
     <!-- ===== Stats Cards ===== -->
     <div class="dashboard-cards">
 
