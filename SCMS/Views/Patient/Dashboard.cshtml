@@ -1,5 +1,4 @@
-﻿@model SCMS.ViewModels.Patient.PatientVM
-<link rel="stylesheet" href="~/css/clinic.css" />
+@model SCMS.ViewModels.Patient.PatientVM
 
 <div class="patient-dashboard">
     <h2>Welcome, @Model.FullName</h2>
@@ -16,13 +15,28 @@
            asp-action="Conversation">
             💬 Chat with Clinic
         </a>
-    </div> <!-- ✅ مهم: قفل dashboard-header -->
+
+        @if (Model.IsProfileIncomplete)
+        {
+            <div class="profile-alert">
+                <strong>⚠️ Attention:</strong>
+                Please Complete Your Information
+
+                <a asp-controller="Patient"
+                   asp-action="Edit"
+                   asp-route-id="@Model.PatientId"
+                   class="btn-complete">
+                    Complete Information
+                </a>
+            </div>
+        }
+    </div>
     <!-- ===== Stats Cards ===== -->
     <div class="dashboard-cards">
 
         <a asp-controller="Patient"
            asp-action="Appointments"
-           asp-route-id="@Model.UserId"
+           asp-route-id="@Model.PatientId"
            class="dashboard-card-link">
             <div class="dashboard-card">
                 <div>
@@ -35,7 +49,7 @@
 
         <a asp-controller="Patient"
            asp-action="Prescriptions"
-           asp-route-id="@Model.UserId"
+           asp-route-id="@Model.PatientId"
            class="dashboard-card-link">
             <div class="dashboard-card">
                 <div>
@@ -48,7 +62,7 @@
 
         <a asp-controller="Patient"
            asp-action="MedicalRecords"
-           asp-route-id="@Model.UserId"
+           asp-route-id="@Model.PatientId"
            class="dashboard-card-link">
             <div class="dashboard-card">
                 <div>
@@ -61,4 +75,3 @@
 
     </div>
 </div>
-

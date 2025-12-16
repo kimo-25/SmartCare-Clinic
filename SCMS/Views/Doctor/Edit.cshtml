@@ -1,0 +1,61 @@
+﻿@model SCMS.ViewModels.DoctorEditVm
+
+@{
+    ViewData["Title"] = "Update Doctor Profile";
+    Layout = "_Layout";
+}
+
+<link rel="stylesheet" href="~/css/clinic.css" />
+
+<div class="container" style="max-width:650px; margin-top:60px;">
+    <div class="card" style="padding:30px;">
+        <h2 style="color: var(--primary); margin-bottom:20px;">✏️ Update Profile</h2>
+
+        <form asp-controller="Doctor" asp-action="Edit" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="DoctorId" />
+
+            <div style="margin-bottom:14px;">
+                <label asp-for="FullName"></label>
+                <input asp-for="FullName" class="form-control" />
+                <span asp-validation-for="FullName" class="text-danger"></span>
+            </div>
+
+            <div style="margin-bottom:14px;">
+                <label asp-for="Specialization"></label>
+                <input asp-for="Specialization" class="form-control" />
+                <span asp-validation-for="Specialization" class="text-danger"></span>
+            </div>
+
+            <div style="margin-bottom:14px;">
+                <label asp-for="YearsOfExperience"></label>
+                <input asp-for="YearsOfExperience" type="number" class="form-control" min="0" />
+                <span asp-validation-for="YearsOfExperience" class="text-danger"></span>
+            </div>
+
+            <div style="margin-bottom:14px;">
+                <label asp-for="DepartmentName"></label>
+                <input asp-for="DepartmentName" class="form-control" />
+                <span asp-validation-for="DepartmentName" class="text-danger"></span>
+            </div>
+
+            <div style="margin-bottom:14px;">
+                <label asp-for="PhoneNumber"></label>
+                <input asp-for="PhoneNumber" class="form-control" />
+                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="margin-top:10px;">
+                Save Changes
+            </button>
+
+            <a asp-controller="Doctor" asp-action="Dashboard" class="btn btn-secondary" style="margin-top:10px;">
+                Cancel
+            </a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

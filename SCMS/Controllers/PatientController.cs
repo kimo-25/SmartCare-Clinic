@@ -26,14 +26,18 @@ namespace SCMS.Controllers
             return t.HasValue ? (UserType)t.Value : UserType.User;
         }
 
-        private async Task<PatientVM?> GetPatientVM(int userId)
+        private async Task<Patient?> GetPatientByUserId(int userId)
         {
-            var patient = await _context.Patients
+            return await _context.Patients
                 .Include(p => p.AppointmentBookings)
                 .Include(p => p.Prescriptions)
                 .Include(p => p.MedicalRecords)
                 .FirstOrDefaultAsync(p => p.UserId == userId);
+        }
 
+        private async Task<PatientVM?> GetPatientVM(int userId)
+        {
+            var patient = await GetPatientByUserId(userId);
             if (patient == null) return null;
 
             return new PatientVM
@@ -76,6 +80,57 @@ namespace SCMS.Controllers
         }
 
         public async Task<IActionResult> Profile(int? id)
+        {
+            if (!User.Identity?.IsAuthenticated ?? true)
+                return RedirectToAction("Login", "Account");
+
+            if (CurrentUserType() != UserType.Patient)
+                return RedirectToAction("AccessDenied", "Account");
+
+            var userId = id ?? CurrentUserId();
+            if (userId <= 0) return RedirectToAction("Login", "Account");
+
+            var vm = await GetPatientVM(userId);
+            if (vm == null) return NotFound();
+
+            return View(vm);
+        }
+
+        public async Task<IActionResult> Appointments(int? id)
+        {
+            if (!User.Identity?.IsAuthenticated ?? true)
+                return RedirectToAction("Login", "Account");
+
+            if (CurrentUserType() != UserType.Patient)
+                return RedirectToAction("AccessDenied", "Account");
+
+            var userId = id ?? CurrentUserId();
+            if (userId <= 0) return RedirectToAction("Login", "Account");
+
+            var vm = await GetPatientVM(userId);
+            if (vm == null) return NotFound();
+
+            return View(vm);
+        }
+
+        public async Task<IActionResult> Prescriptions(int? id)
+        {
+            if (!User.Identity?.IsAuthenticated ?? true)
+                return RedirectToAction("Login", "Account");
+
+            if (CurrentUserType() != UserType.Patient)
+                return RedirectToAction("AccessDenied", "Account");
+
+            var userId = id ?? CurrentUserId();
+            if (userId <= 0) return RedirectToAction("Login", "Account");
+
+            var vm = await GetPatientVM(userId);
+            if (vm == null) return NotFound();
+
+            return View(vm);
+        }
+
+        public async Task<IActionResult> MedicalRecords(int? id)
         {
             if (!User.Identity?.IsAuthenticated ?? true)
                 return RedirectToAction("Login", "Account");

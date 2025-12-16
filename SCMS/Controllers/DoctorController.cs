@@ -85,7 +85,14 @@ namespace SCMS.Controllers
                 PhoneNumber = doctor.PhoneNumber,
                 AverageRate = doctor.Feedbacks.Any() ? doctor.Feedbacks.Average(f => f.Rate) : 0,
                 FeedbackCount = doctor.Feedbacks.Count,
-                UpcomingAppointments = doctor.Appointments
+
+                IsProfileIncomplete =
+                    string.IsNullOrWhiteSpace(doctor.PhoneNumber) ||
+                    string.IsNullOrWhiteSpace(doctor.DepartmentName) ||
+                    string.IsNullOrWhiteSpace(doctor.Specialization) 
+                    ,
+
+                            UpcomingAppointments = doctor.Appointments
                     .Where(a => a.AppointmentDate >= DateTime.Today)
                     .OrderBy(a => a.AppointmentDate)
                     .Select(a => new DoctorAppointmentVm
@@ -98,7 +105,8 @@ namespace SCMS.Controllers
                         CurrentCount = a.CurrentCount,
                         Status = a.Status
                     }).ToList()
-            };
+                        };
+
 
             return View(vm);
         }
@@ -322,6 +330,69 @@ namespace SCMS.Controllers
 
             return RedirectToAction("MedicalRecords");
         }
+
+        [HttpGet]
+        public async Task<IActionResult> Edit(int? id)
+        {
+            var guard = RequireDoctor();
+            if (guard != null) return guard;
+
+            var currentId = CurrentUserId();
+            var isAdmin = User.IsInRole("Admin");
+
+            var doctorId = isAdmin ? (id ?? currentId) : currentId;
+            if (doctorId <= 0) return RedirectToAction("Login", "Account");
+
+            var doctor = await _context.Set<Doctor>()
+                .FirstOrDefaultAsync(d => d.UserId == doctorId);
+
+            if (doctor == null) return NotFound();
+
+            var vm = new DoctorEditVm
+            {
+                DoctorId = doctor.UserId,
+                FullName = doctor.FullName,
+                Specialization = doctor.Specialization,
+                YearsOfExperience = doctor.YearsOfExperience,
+                DepartmentName = doctor.DepartmentName,
+                PhoneNumber = doctor.PhoneNumber
+            };
+
+            return View(vm);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(DoctorEditVm vm)
+        {
+            var guard = RequireDoctor();
+            if (guard != null) return guard;
+
+            var currentId = CurrentUserId();
+            var isAdmin = User.IsInRole("Admin");
+
+            if (!isAdmin && vm.DoctorId != currentId)
+                return RedirectToAction("AccessDenied", "Account");
+
+            if (!ModelState.IsValid)
+                return View(vm);
+
+            var doctor = await _context.Set<Doctor>()
+                .FirstOrDefaultAsync(d => d.UserId == vm.DoctorId);
+
+            if (doctor == null) return NotFound();
+
+            doctor.FullName = vm.FullName.Trim();
+            doctor.Specialization = vm.Specialization.Trim();
+            doctor.YearsOfExperience = vm.YearsOfExperience;
+            doctor.DepartmentName = vm.DepartmentName.Trim();
+            doctor.PhoneNumber = vm.PhoneNumber.Trim();
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Dashboard));
+        }
+
 
         public async Task<IActionResult> PatientFile(int patientId)
         {

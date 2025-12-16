@@ -1,5 +1,7 @@
 ﻿@model IEnumerable<SCMS.Models.RadiologyResult>
+
 @section Styles {
+    <link rel="stylesheet" href="~/css/sidebar.css" />
     <link rel="stylesheet" href="~/css/clinic.css" />
 }
 
@@ -7,41 +9,47 @@
     ViewData["Title"] = "Patient Radiology Results";
 }
 
-<h2>Patient Radiology Results</h2>
+<div class="soft-header">
+    <h2>Patient Radiology Results</h2>
+</div>
 
-@if (!Model.Any())
-{
-    <div class="alert alert-info">
-        No radiology results found for this patient.
-    </div>
-}
-else
-{
-    <table class="table table-bordered table-striped">
-        <thead>
-            <tr>
-                <th>Test Name</th>
-                <th>Result Date</th>
-                <th>Status</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-@foreach (var result in Model)
-{
-            <tr>
-                <td>@result.Request?.TestName</td>
-                <td>@result.ResultDate.ToShortDateString()</td>
-                <td>@result.Status</td>
-                <td>
-                    <a asp-action="ResultDetails"
-                       asp-route-id="@result.ResultId"
-                       class="btn btn-sm btn-primary">
-                        View Result
-                    </a>
-                </td>
-            </tr>
-}
-        </tbody>
-    </table>
+<div class="page-container">
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">No radiology results found for this patient.</div>
+    }
+    else
+    {
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>Test Name</th>
+                    <th>Result Date</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var result in Model)
+                {
+                    <tr>
+                        <td>@result.Request?.TestName</td>
+                        <td>@result.ResultDate.ToShortDateString()</td>
+                        <td>@result.Status</td>
+                        <td>
+                            <a asp-action="ResultDetails"
+                               asp-route-id="@result.ResultId"
+                               class="btn btn-sm btn-primary">
+                                View Result
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
 }

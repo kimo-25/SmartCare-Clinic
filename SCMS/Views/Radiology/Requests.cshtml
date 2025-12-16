@@ -1,5 +1,7 @@
 ﻿@model SCMS.ViewModels.RadiologyRequestListVm
+
 @section Styles {
+    <link rel="stylesheet" href="~/css/sidebar.css" />
     <link rel="stylesheet" href="~/css/clinic.css" />
 }
 
@@ -7,38 +9,82 @@
     ViewData["Title"] = "Radiology Requests";
 }
 
-<h2>Radiology Requests</h2>
+<div class="soft-header d-flex justify-content-between align-items-center">
+    <h2>Radiology Requests</h2>
 
-<table class="table table-bordered table-striped">
-    <thead class="table-light">
-        <tr>
-            <th>Patient Name</th>
-            <th>Age</th>
-            <th>Phone</th>
-            <th>Test</th>
-            <th>Status</th>
-            <th>Request Date</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var req in Model.Requests)
-{
-        <tr>
-            <td>@req.PatientName</td>
-            <td>@req.Age</td>
-            <td>@req.Phone</td>
-            <td>@req.TestName</td>
-            <td>@req.Status</td>
-            <td>@req.RequestDate.ToString("dd/MM/yyyy")</td>
-            <td>
-                <a asp-action="RequestDetails"
-                   asp-route-id="@req.RequestId"
-                   class="btn btn-sm btn-primary">
-                    Details
-                </a>
-            </td>
-        </tr>
+    <!-- زرار Share Ray مستقل -->
+    <div>
+        <button type="button" class="btn btn-info" onclick="document.getElementById('shareRayFile').click();">
+            Share Ray
+        </button>
+        <input type="file" id="shareRayFile" style="display:none" multiple onchange="shareFiles(this.files)" />
+    </div>
+</div>
+
+<div class="page-container mt-3">
+    @if (!Model.Requests.Any())
+    {
+        <div class="alert alert-info">
+            No radiology requests found.
+        </div>
+    }
+    else
+    {
+        <table class="table table-bordered table-striped">
+            <thead class="table-light">
+                <tr>
+                    <th>Patient Name</th>
+                    <th>Age</th>
+                    <th>Phone</th>
+                    <th>Test</th>
+                    <th>Status</th>
+                    <th>Request Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var req in Model.Requests)
+                {
+                    <tr>
+                        <td>@req.PatientName</td>
+                        <td>@req.Age</td>
+                        <td>@req.Phone</td>
+                        <td>@req.TestName</td>
+                        <td>@req.Status</td>
+                        <td>@req.RequestDate.ToString("dd/MM/yyyy")</td>
+                        <td>
+                            @if (req.Status == "Pending")
+                            {
+                                <a asp-action="CreateResult"
+                                   asp-route-requestId="@req.RequestId"
+                                   class="btn btn-sm btn-success mb-1">
+                                    Add Result
+                                </a>
+                            }
+                            else
+                            {
+                                <a asp-action="ResultDetails"
+                                   asp-route-id="@req.RequestId"
+                                   class="btn btn-sm btn-primary mb-1">
+                                    View Result
+                                </a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function shareFiles(files) {
+            for (let i = 0; i < files.length; i++) {
+                alert('Selected file: ' + files[i].name);
+            }
+            // هنا ممكن تضيف كود رفع الملفات على السيرفر لو عايز
+        }
+    </script>
 }
-    </tbody>
-</table>

@@ -1,4 +1,4 @@
-﻿@model SCMS.Models.User
+﻿@model SCMS.ViewModels.UserSummaryVm
 
 @{
     ViewData["Title"] = "Edit User";
@@ -9,32 +9,31 @@
     <div class="card" style="padding:30px; text-align:center;">
         <h1 style="color: var(--primary); font-size:28px; margin-bottom:20px;">✏️ Edit User</h1>
 
-        <form asp-action="EditUser" method="post">
+        <form asp-controller="Admin" asp-action="EditUser" method="post">
+            @Html.AntiForgeryToken()
             <input type="hidden" asp-for="UserId" />
 
-            <label for="FullName">Full Name</label>
-            <input type="text" id="FullName" asp-for="FullName" placeholder="Enter full name" required />
+            <label asp-for="FullName"></label>
+            <input asp-for="FullName" placeholder="Enter full name" required />
 
-            <label for="Email">Email</label>
-            <input type="email" id="Email" asp-for="Email" placeholder="Enter email" required />
+            <label asp-for="Email"></label>
+            <input asp-for="Email" type="email" placeholder="Enter email" required />
 
-            <label for="Phone">Phone</label>
-            <input type="text" id="Phone" asp-for="Phone" placeholder="Enter phone number" />
+            <label asp-for="Phone"></label>
+            <input asp-for="Phone" placeholder="Enter phone number" />
 
-            <label for="UserType">User Type</label>
-            <select id="UserType" name="UserType" required>
-                <option value="Admin" selected="@((Model.GetType().Name == "Admin").ToString())">Admin</option>
-                <option value="Doctor" selected="@((Model.GetType().Name == "Doctor").ToString())">Doctor</option>
-                <option value="Receptionist" selected="@((Model.GetType().Name == "Receptionist").ToString())">Receptionist</option>
-                <option value="Radiologist" selected="@((Model.GetType().Name == "Radiologist").ToString())">Radiologist</option>
-                <option value="Patient" selected="@((Model.GetType().Name == "Patient").ToString())">Patient</option>
-            </select>
+            <label>User Type</label>
+            <input value="@Model.UserType" disabled />
 
             <button type="submit" class="btn btn-primary" style="margin-top:20px;">Update User</button>
         </form>
 
         <div style="margin-top:15px;">
-            <a asp-action="Users" class="btn btn-secondary">Back to Users List</a>
+            <a asp-controller="Admin" asp-action="Users" class="btn btn-secondary">Back to Users List</a>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -14,6 +14,20 @@
             Rating: @Model.AverageRate.ToString("0.0") (@Model.FeedbackCount Feedbacks)
         </span>
     </div>
+    @if (Model.IsProfileIncomplete)
+    {
+        <div class="profile-alert">
+            <strong>⚠️ Attention:</strong>
+             Please Complete Your Informatin
+
+            <a asp-controller="Doctor"
+               asp-action="Edit"
+               class="btn-complete">
+                Complete Information
+            </a>
+        </div>
+    }
+
 
     <!-- Info Cards -->
     <div class="dashboard-cards">

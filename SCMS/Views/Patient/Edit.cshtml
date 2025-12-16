@@ -8,7 +8,7 @@
     @if (!ViewData.ModelState.IsValid)
     {
         <div class="form-alert">
-            <strong>⚠️</strong> برجاء تصحيح الأخطاء بالأسفل.
+            <strong>⚠️</strong> Please Update Your Info.
         </div>
     }
 
@@ -41,7 +41,7 @@
 
             <div class="form-group">
                 <label asp-for="Address">Address</label>
-                <input asp-for="Address" class="form-control" placeholder="Enter address" required/>
+                <input asp-for="Address" class="form-control" placeholder="Enter address" />
                 <span asp-validation-for="Address" class="text-danger"></span>
             </div>
 
