@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace SCMS.ViewModels
 {
@@ -8,13 +9,15 @@ namespace SCMS.ViewModels
     {
         public int RequestId { get; set; }
 
+        public int? ResultId { get; set; }
+
         public string PatientName { get; set; } = null!;
 
         public int Age { get; set; }
 
         public string Phone { get; set; } = null!;
 
-        public DateTime RequestDate { get; set; }  
+        public DateTime RequestDate { get; set; }
 
         public string TestName { get; set; } = null!;
 
@@ -33,7 +36,6 @@ namespace SCMS.ViewModels
             = new List<RadiologyRequestItemVm>();
     }
 
-    // ===== Create Request =====
     public class RadiologyRequestFormVm
     {
         [Required]
@@ -57,15 +59,16 @@ namespace SCMS.ViewModels
         [Required]
         public int RequestId { get; set; }
 
-        [Required]
         public int RadiologistId { get; set; }
 
-        [Display(Name = "Image Path")]
-        public string? ImagePath { get; set; }
+        [Display(Name = "Ray File")]
+        public IFormFile? RayFile { get; set; }
 
         [Required]
         public string Report { get; set; } = null!;
 
         public string Status { get; set; } = "Completed";
+
+        public string? ImagePath { get; set; }
     }
 }

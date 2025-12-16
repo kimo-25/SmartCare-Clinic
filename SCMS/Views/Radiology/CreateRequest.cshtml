@@ -1,0 +1,49 @@
+﻿@model SCMS.ViewModels.RadiologyRequestFormVm
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/sidebar.css" />
+    <link rel="stylesheet" href="~/css/clinic.css" />
+}
+
+@{
+    ViewData["Title"] = "Create Radiology Request";
+}
+
+<div class="soft-header">
+    <h2>Create Radiology Request</h2>
+</div>
+
+<div class="page-container">
+    <form asp-action="CreateRequest" method="post">
+        @Html.AntiForgeryToken()
+
+        <input type="hidden" asp-for="PatientId" />
+        <input type="hidden" asp-for="DoctorId" />
+
+        <div class="mb-3">
+            <label asp-for="TestName" class="form-label"></label>
+            <input asp-for="TestName" class="form-control" placeholder="e.g. Chest X-Ray" />
+            <span asp-validation-for="TestName" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="ClinicalNotes" class="form-label"></label>
+            <textarea asp-for="ClinicalNotes" rows="4" class="form-control"
+                      placeholder="Clinical notes (optional)"></textarea>
+            <span asp-validation-for="ClinicalNotes" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="PrescriptionId" class="form-label"></label>
+            <input asp-for="PrescriptionId" class="form-control" placeholder="Optional PrescriptionId" />
+            <span asp-validation-for="PrescriptionId" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save Request</button>
+        <a asp-action="Requests" class="btn btn-secondary ms-2">Back</a>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

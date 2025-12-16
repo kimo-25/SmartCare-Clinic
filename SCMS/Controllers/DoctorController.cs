@@ -19,46 +19,39 @@ namespace SCMS.Controllers
 
         private int CurrentUserId()
         {
-            // 1) Session
             var userIdStr = HttpContext.Session.GetString("UserId");
             if (int.TryParse(userIdStr, out var id) && id > 0)
                 return id;
 
-            // 2) Claims (Cookie)
             var claimId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             return int.TryParse(claimId, out var cid) ? cid : 0;
         }
 
         private UserType CurrentUserType()
         {
-            // 1) Session
             var t = HttpContext.Session.GetInt32("UserType");
             if (t.HasValue) return (UserType)t.Value;
 
-            // 2) Claims Role
             if (User.IsInRole("Admin")) return UserType.Admin;
             if (User.IsInRole("Doctor")) return UserType.Doctor;
 
             return UserType.User;
         }
 
-        private IActionResult RequireDoctor()
+        private IActionResult? RequireDoctor()
         {
-            // لو مش مسجل دخول (حتى مع Authorize، احتياط)
             if (!(User?.Identity?.IsAuthenticated ?? false))
                 return RedirectToAction("Login", "Account");
 
             var userId = CurrentUserId();
             if (userId == 0) return RedirectToAction("Login", "Account");
 
-            // انت كنت سامح Admin يدخل هنا — خليتها زي ما هي
             if (CurrentUserType() != UserType.Doctor && CurrentUserType() != UserType.Admin)
                 return RedirectToAction("AccessDenied", "Account");
 
-            return null!;
+            return null;
         }
 
-        // Dashboard
         public async Task<IActionResult> Dashboard()
         {
             var guard = RequireDoctor();
@@ -83,16 +76,17 @@ namespace SCMS.Controllers
                 YearsOfExperience = doctor.YearsOfExperience,
                 DepartmentName = doctor.DepartmentName,
                 PhoneNumber = doctor.PhoneNumber,
+
                 AverageRate = doctor.Feedbacks.Any() ? doctor.Feedbacks.Average(f => f.Rate) : 0,
                 FeedbackCount = doctor.Feedbacks.Count,
 
                 IsProfileIncomplete =
                     string.IsNullOrWhiteSpace(doctor.PhoneNumber) ||
                     string.IsNullOrWhiteSpace(doctor.DepartmentName) ||
-                    string.IsNullOrWhiteSpace(doctor.Specialization) 
-                    ,
+                    string.IsNullOrWhiteSpace(doctor.Specialization) ||
+                    doctor.YearsOfExperience <= 0,
 
-                            UpcomingAppointments = doctor.Appointments
+                UpcomingAppointments = doctor.Appointments
                     .Where(a => a.AppointmentDate >= DateTime.Today)
                     .OrderBy(a => a.AppointmentDate)
                     .Select(a => new DoctorAppointmentVm
@@ -103,15 +97,14 @@ namespace SCMS.Controllers
                         EndTime = a.EndTime,
                         Capacity = a.Capacity,
                         CurrentCount = a.CurrentCount,
-                        Status = a.Status
+                        Status = a.Status,
+                        Price = a.Price
                     }).ToList()
-                        };
-
+            };
 
             return View(vm);
         }
 
-        // Appointments List
         public async Task<IActionResult> Appointments()
         {
             var guard = RequireDoctor();
@@ -139,7 +132,8 @@ namespace SCMS.Controllers
                         EndTime = a.EndTime,
                         Capacity = a.Capacity,
                         CurrentCount = a.CurrentCount,
-                        Status = a.Status
+                        Status = a.Status,
+                        Price = a.Price
                     }).ToList()
             };
 
@@ -154,6 +148,8 @@ namespace SCMS.Controllers
             var doctorId = CurrentUserId();
 
             var appointment = await _context.Appointments
+                .Include(a => a.Bookings)
+                    .ThenInclude(b => b.Patient)
                 .FirstOrDefaultAsync(a => a.AppointmentId == id && a.DoctorId == doctorId);
 
             if (appointment == null) return NotFound();
@@ -166,7 +162,19 @@ namespace SCMS.Controllers
                 EndTime = appointment.EndTime,
                 Capacity = appointment.Capacity,
                 CurrentCount = appointment.CurrentCount,
-                Status = appointment.Status
+                Status = appointment.Status,
+                Price = appointment.Price,
+
+                Patients = appointment.Bookings
+                    .Where(b => b.Patient != null)
+                    .Select(b => new DoctorAppointmentPatientVm
+                    {
+                        PatientId = b.Patient.UserId,
+                        FullName = b.Patient.FullName,
+                        Age = b.Patient.Age,
+                        Phone = b.Patient.Phone ?? ""
+                    })
+                    .ToList()
             };
 
             return View(vm);
@@ -201,7 +209,8 @@ namespace SCMS.Controllers
                 EndTime = vm.EndTime,
                 Capacity = vm.Capacity,
                 CurrentCount = 0,
-                Status = vm.Status
+                Status = vm.Status,
+                Price = vm.Price
             };
 
             _context.Appointments.Add(appointment);
@@ -216,10 +225,8 @@ namespace SCMS.Controllers
             var guard = RequireDoctor();
             if (guard != null) return guard;
 
-            var doctorId = CurrentUserId();
-
             ViewBag.PatientId = patientId;
-            ViewBag.DoctorId = doctorId;
+            ViewBag.DoctorId = CurrentUserId();
             return View();
         }
 
@@ -235,13 +242,13 @@ namespace SCMS.Controllers
             if (!ModelState.IsValid)
                 return View(vm);
 
-            vm.DoctorId = doctorId; // prevent tampering
+            vm.DoctorId = doctorId;
             vm.CreatedAt = DateTime.UtcNow;
 
             _context.Prescriptions.Add(vm);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("Dashboard");
+            return RedirectToAction(nameof(Dashboard));
         }
 
         public async Task<IActionResult> MedicalRecords()
@@ -331,69 +338,6 @@ namespace SCMS.Controllers
             return RedirectToAction("MedicalRecords");
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Edit(int? id)
-        {
-            var guard = RequireDoctor();
-            if (guard != null) return guard;
-
-            var currentId = CurrentUserId();
-            var isAdmin = User.IsInRole("Admin");
-
-            var doctorId = isAdmin ? (id ?? currentId) : currentId;
-            if (doctorId <= 0) return RedirectToAction("Login", "Account");
-
-            var doctor = await _context.Set<Doctor>()
-                .FirstOrDefaultAsync(d => d.UserId == doctorId);
-
-            if (doctor == null) return NotFound();
-
-            var vm = new DoctorEditVm
-            {
-                DoctorId = doctor.UserId,
-                FullName = doctor.FullName,
-                Specialization = doctor.Specialization,
-                YearsOfExperience = doctor.YearsOfExperience,
-                DepartmentName = doctor.DepartmentName,
-                PhoneNumber = doctor.PhoneNumber
-            };
-
-            return View(vm);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(DoctorEditVm vm)
-        {
-            var guard = RequireDoctor();
-            if (guard != null) return guard;
-
-            var currentId = CurrentUserId();
-            var isAdmin = User.IsInRole("Admin");
-
-            if (!isAdmin && vm.DoctorId != currentId)
-                return RedirectToAction("AccessDenied", "Account");
-
-            if (!ModelState.IsValid)
-                return View(vm);
-
-            var doctor = await _context.Set<Doctor>()
-                .FirstOrDefaultAsync(d => d.UserId == vm.DoctorId);
-
-            if (doctor == null) return NotFound();
-
-            doctor.FullName = vm.FullName.Trim();
-            doctor.Specialization = vm.Specialization.Trim();
-            doctor.YearsOfExperience = vm.YearsOfExperience;
-            doctor.DepartmentName = vm.DepartmentName.Trim();
-            doctor.PhoneNumber = vm.PhoneNumber.Trim();
-
-            await _context.SaveChangesAsync();
-
-            return RedirectToAction(nameof(Dashboard));
-        }
-
-
         public async Task<IActionResult> PatientFile(int patientId)
         {
             var guard = RequireDoctor();
@@ -432,6 +376,64 @@ namespace SCMS.Controllers
             };
 
             return View(vm);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Edit(int? id)
+        {
+            var guard = RequireDoctor();
+            if (guard != null) return guard;
+
+            var currentId = CurrentUserId();
+            var isAdmin = User.IsInRole("Admin");
+
+            var doctorId = isAdmin ? (id ?? currentId) : currentId;
+            if (doctorId <= 0) return RedirectToAction("Login", "Account");
+
+            var doctor = await _context.Set<Doctor>().FirstOrDefaultAsync(d => d.UserId == doctorId);
+            if (doctor == null) return NotFound();
+
+            var vm = new DoctorEditVm
+            {
+                DoctorId = doctor.UserId,
+                FullName = doctor.FullName,
+                Specialization = doctor.Specialization,
+                YearsOfExperience = doctor.YearsOfExperience,
+                DepartmentName = doctor.DepartmentName,
+                PhoneNumber = doctor.PhoneNumber
+            };
+
+            return View(vm);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(DoctorEditVm vm)
+        {
+            var guard = RequireDoctor();
+            if (guard != null) return guard;
+
+            var currentId = CurrentUserId();
+            var isAdmin = User.IsInRole("Admin");
+
+            if (!isAdmin && vm.DoctorId != currentId)
+                return RedirectToAction("AccessDenied", "Account");
+
+            if (!ModelState.IsValid)
+                return View(vm);
+
+            var doctor = await _context.Set<Doctor>().FirstOrDefaultAsync(d => d.UserId == vm.DoctorId);
+            if (doctor == null) return NotFound();
+
+            doctor.FullName = vm.FullName.Trim();
+            doctor.Specialization = vm.Specialization.Trim();
+            doctor.YearsOfExperience = vm.YearsOfExperience;
+            doctor.DepartmentName = vm.DepartmentName.Trim();
+            doctor.PhoneNumber = vm.PhoneNumber.Trim();
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Dashboard));
         }
     }
 }

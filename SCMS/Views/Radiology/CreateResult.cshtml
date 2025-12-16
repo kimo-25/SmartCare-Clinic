@@ -14,25 +14,25 @@
 </div>
 
 <div class="page-container">
-    <form asp-action="CreateResult" method="post">
+    <form asp-action="CreateResult" method="post" enctype="multipart/form-data">
         @Html.AntiForgeryToken()
 
         <input type="hidden" asp-for="RequestId" />
         <input type="hidden" asp-for="RadiologistId" />
+        <input type="hidden" asp-for="Status" />
 
         <div class="mb-3">
-            <label asp-for="ImagePath" class="form-label"></label>
-            <input asp-for="ImagePath" class="form-control" placeholder="e.g. /images/xray1.png" />
-            <span asp-validation-for="ImagePath" class="text-danger"></span>
+            <label class="form-label">Ray File</label>
+            <input asp-for="RayFile" type="file" class="form-control" accept=".png,.jpg,.jpeg,.pdf" />
+            <span asp-validation-for="RayFile" class="text-danger"></span>
         </div>
 
         <div class="mb-3">
             <label asp-for="Report" class="form-label"></label>
-            <textarea asp-for="Report" rows="5" class="form-control" placeholder="Write radiology report here..."></textarea>
+            <textarea asp-for="Report" rows="5" class="form-control"
+                      placeholder="Write radiology report here..."></textarea>
             <span asp-validation-for="Report" class="text-danger"></span>
         </div>
-
-        <input type="hidden" asp-for="Status" />
 
         <button type="submit" class="btn btn-success">Save Result</button>
         <a asp-action="Requests" class="btn btn-secondary ms-2">Back</a>

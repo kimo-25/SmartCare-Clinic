@@ -1,64 +1,66 @@
 ﻿@model SCMS.ViewModels.DoctorAppointmentVm
 
-@{
-    ViewData["Title"] = "Appointment Details";
-}
-
-<!-- Unified Clinic CSS -->
 <link rel="stylesheet" href="~/css/clinic.css" />
 
-<div class="container appointment-details">
+<div class="soft-header">
+    <h2>Appointment Details</h2>
+</div>
 
-    <h2 class="page-title">Appointment Details</h2>
-
-    <div class="details-card">
-
-        <div class="detail-row">
-            <span class="label">Date</span>
-            <span class="value">
-                @Model.AppointmentDate.ToString("dd MMM yyyy")
-            </span>
-        </div>
-
-        <div class="detail-row">
-            <span class="label">Time</span>
-            <span class="value">
-                @Model.StartTime.ToString(@"hh\:mm")
-                -
-                @Model.EndTime.ToString(@"hh\:mm")
-            </span>
-        </div>
-
-        <div class="detail-row">
-            <span class="label">Capacity</span>
-            <span class="value">@Model.Capacity</span>
-        </div>
-
-        <div class="detail-row">
-            <span class="label">Booked Patients</span>
-            <span class="value">@Model.CurrentCount</span>
-        </div>
-
-        <div class="detail-row">
-            <span class="label">Remaining Slots</span>
-            <span class="value">@Model.RemainingSlots</span>
-        </div>
-
-        <div class="detail-row">
-            <span class="label">Status</span>
-            <span class="value status-text">
-                @Model.Status
-            </span>
-        </div>
-
+<div class="page-container">
+    <div class="card">
+        <h3>@Model.AppointmentDate.ToString("dd/MM/yyyy")</h3>
+        <p>
+            <strong>Time:</strong> @Model.StartTime - @Model.EndTime
+            <br />
+            <strong>Status:</strong> @Model.Status
+        </p>
     </div>
 
-    <div class="actions">
-        <a asp-action="Dashboard"
-           asp-controller="Doctor"
-           class="btn secondary-btn">
-            Back
-        </a>
-    </div>
+    <div class="card">
+        <div class="soft-header">Booked Patients</div>
 
+        @if (Model.Patients == null || !Model.Patients.Any())
+        {
+            <div class="form-alert">No patients booked for this appointment.</div>
+        }
+        else
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Patient</th>
+                        <th>Age</th>
+                        <th>Phone</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in Model.Patients)
+                    {
+                        <tr>
+                            <td>@p.FullName</td>
+                            <td>@p.Age</td>
+                            <td>@p.Phone</td>
+                            <td style="display:flex; gap:8px; flex-wrap:wrap;">
+                                <a class="btn btn-primary"
+                                   asp-controller="Doctor"
+                                   asp-action="CreatePrescription"
+                                   asp-route-patientId="@p.PatientId">
+                                    Write Prescription
+                                </a>
+
+                                <a class="btn btn-outline"
+                                   asp-controller="Radiology"
+                                   asp-action="CreateRequest"
+                                   asp-route-patientId="@p.PatientId"
+                                   asp-route-doctorId="@Context.Session.GetString("UserId")">
+                                    Create Radiology
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
 </div>

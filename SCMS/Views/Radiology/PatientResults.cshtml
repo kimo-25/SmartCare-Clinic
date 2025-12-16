@@ -26,6 +26,7 @@
                     <th>Test Name</th>
                     <th>Result Date</th>
                     <th>Status</th>
+                    <th>File</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -34,8 +35,20 @@
                 {
                     <tr>
                         <td>@result.Request?.TestName</td>
-                        <td>@result.ResultDate.ToShortDateString()</td>
+                        <td>@result.ResultDate.ToString("dd/MM/yyyy")</td>
                         <td>@result.Status</td>
+                        <td>
+                            @if (!string.IsNullOrWhiteSpace(result.ImagePath))
+                            {
+                                <a href="@result.ImagePath" target="_blank" class="btn btn-sm btn-outline">
+                                    Open
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
                         <td>
                             <a asp-action="ResultDetails"
                                asp-route-id="@result.ResultId"
@@ -49,7 +62,3 @@
         </table>
     }
 </div>
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}

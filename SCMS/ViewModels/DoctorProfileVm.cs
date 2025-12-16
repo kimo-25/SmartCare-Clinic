@@ -4,6 +4,14 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SCMS.ViewModels
 {
+    public class DoctorAppointmentPatientVm
+    {
+        public int PatientId { get; set; }
+        public string FullName { get; set; } = null!;
+        public int Age { get; set; }
+        public string Phone { get; set; } = "";
+    }
+
     public class DoctorAppointmentVm
     {
         public int AppointmentId { get; set; }
@@ -19,7 +27,10 @@ namespace SCMS.ViewModels
         public double Price { get; set; }
 
         public string Status { get; set; } = null!;
+
+        public List<DoctorAppointmentPatientVm> Patients { get; set; } = new();
     }
+
     public class DoctorEditVm
     {
         public int DoctorId { get; set; }
@@ -39,6 +50,7 @@ namespace SCMS.ViewModels
         [Required]
         public string PhoneNumber { get; set; } = "";
     }
+
     public class DoctorProfileVm
     {
         public int DoctorId { get; set; }
