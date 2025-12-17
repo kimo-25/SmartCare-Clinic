@@ -1,0 +1,66 @@
+﻿@{
+    ViewData["Title"] = "Home";
+    Layout = "_PublicLayout";
+}
+
+<div class="container py-5">
+
+    <!-- Hero Section -->
+    <div class="text-center mb-5">
+        <h1 class="mb-3">Welcome to SmartCare Dental Clinic</h1>
+        <p class="text-muted fs-5">
+            Professional dental care for a healthier and brighter smile.
+        </p>
+
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            <a class="btn btn-primary btn-lg"
+               asp-controller="Account"
+               asp-action="Login">
+                Login
+            </a>
+
+            <a class="btn btn-outline-secondary btn-lg"
+               asp-controller="Feedback"
+               asp-action="Index">
+                View Patient Feedbacks
+            </a>
+        </div>
+    </div>
+
+    <hr class="my-5" />
+
+    <!-- Services Section -->
+    <div class="mb-5">
+        <h3 class="mb-3">Our Dental Services</h3>
+        <ul class="fs-5">
+            <li>General Dental Examination</li>
+            <li>Teeth Cleaning & Polishing</li>
+            <li>Fillings & Root Canal Treatment</li>
+            <li>Dental Crowns & Bridges</li>
+            <li>Cosmetic Dentistry</li>
+        </ul>
+    </div>
+
+    <hr class="my-5" />
+
+    <!-- About Section -->
+    <div class="mb-5">
+        <h3 class="mb-3">Why Choose SmartCare?</h3>
+        <p class="fs-5 text-muted">
+            At SmartCare Dental Clinic, we focus on patient comfort, modern
+            equipment, and high-quality dental treatments provided by
+            experienced professionals.
+        </p>
+    </div>
+
+    <hr class="my-5" />
+
+    <!-- Call to Action -->
+    <div class="text-center">
+        <h4 class="mb-3">Book Your Appointment Today</h4>
+        <p class="text-muted fs-5">
+            Your smile deserves the best care.
+        </p>
+    </div>
+
+</div>

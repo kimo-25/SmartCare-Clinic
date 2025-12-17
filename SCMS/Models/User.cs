@@ -22,13 +22,19 @@ namespace SCMS.Models
         public string PasswordHash { get; set; } = null!;
 
         [MaxLength(20)]
-        public string? Phone { get; set; }   // ✅ nullable عشان ميكسرش seeding
+        public string? Phone { get; set; }
 
         public bool IsActive { get; set; } = true;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        // ✅ Reset Password Flow (Token + Expiry)
+        [MaxLength(200)]
+        public string? PasswordResetTokenHash { get; set; }
+
+        public DateTime? PasswordResetTokenExpiryUtc { get; set; }
+
         [NotMapped]
-        public string Role => GetType().Name; // ✅ للعرض بس (مش للـ DB ولا للـ query)
+        public string Role => GetType().Name;
     }
 }

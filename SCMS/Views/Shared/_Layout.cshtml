@@ -10,6 +10,20 @@
         userId = parsedId;
     }
 
+    // ✅ fallback: لو الـSession فاضي خُد من الـRoles
+    var resolvedUserType = userType;
+    if (!resolvedUserType.HasValue)
+    {
+        if (User?.Identity?.IsAuthenticated ?? false)
+        {
+            if (User.IsInRole("Admin")) resolvedUserType = (int)UserType.Admin;
+            else if (User.IsInRole("Doctor")) resolvedUserType = (int)UserType.Doctor;
+            else if (User.IsInRole("Radiologist")) resolvedUserType = (int)UserType.Radiologist;
+            else if (User.IsInRole("Receptionist")) resolvedUserType = (int)UserType.Receptionist;
+            else if (User.IsInRole("Patient")) resolvedUserType = (int)UserType.Patient;
+        }
+    }
+
     var currentController = ViewContext.RouteData.Values["Controller"]?.ToString() ?? "";
     var currentAction = ViewContext.RouteData.Values["Action"]?.ToString() ?? "";
 
@@ -28,6 +42,7 @@
     <link rel="stylesheet" href="~/css/clinic.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/SCMS.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/sidebar.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/feedbacks.css" asp-append-version="true" />
 
     @RenderSection("Styles", required: false)
 </head>
@@ -38,7 +53,10 @@
         <!-- ===== Sidebar ===== -->
         <aside class="sidebar">
             <div class="brand">
-                <div class="logo"></div>
+                <img src="~/images/logo.svg"
+                     class="logo"
+                     alt="SmartCare Logo"
+                     asp-append-version="true" />
                 <div>
                     <div class="t1">SmartCare</div>
                     <div class="t2">Clinic System</div>
@@ -47,9 +65,9 @@
 
             <ul class="nav flex-column">
                 @* =========================
-   Radiologist Menu
-   ========================= *@
-                @if (userType == (int)UserType.Radiologist)
+                   Radiologist Menu
+                   ========================= *@
+                @if (resolvedUserType == (int)UserType.Radiologist)
                 {
                     <li class="nav-item">
                         <a class="nav-link @Active("Radiology", "Requests")"
@@ -71,13 +89,46 @@
                             <span>✅</span> <span>Completed Requests</span>
                         </a>
                     </li>
-
-                   
                 }
+
+                @* =========================
+                   Doctor Menu (✅ based on your DoctorController actions)
+                   ========================= *@
+                @if (resolvedUserType == (int)UserType.Doctor || resolvedUserType == (int)UserType.Admin)
+                {
+                    <li class="nav-item">
+                        <a class="nav-link @Active("Doctor", "Dashboard")"
+                           asp-controller="Doctor" asp-action="Dashboard">
+                            <span>🏠</span> <span>Dashboard</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link @Active("Doctor", "Appointments")"
+                           asp-controller="Doctor" asp-action="Appointments">
+                            <span>📅</span> <span>Appointments</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link @Active("Doctor", "MedicalRecords")"
+                           asp-controller="Doctor" asp-action="MedicalRecords">
+                            <span>📋</span> <span>Medical Records</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link @Active("Doctor", "Edit")"
+                           asp-controller="Doctor" asp-action="Edit">
+                            <span>👤</span> <span>Edit Profile</span>
+                        </a>
+                    </li>
+                }
+
                 @* =========================
                    Patient Menu
                    ========================= *@
-                @if (userType == (int)UserType.Patient)
+                @if (resolvedUserType == (int)UserType.Patient)
                 {
                     <li class="nav-item">
                         <a class="nav-link @Active("Patient", "Dashboard")"
@@ -118,7 +169,7 @@
                 @* =========================
                    Receptionist Menu
                    ========================= *@
-                @if (userType == (int)UserType.Receptionist)
+                @if (resolvedUserType == (int)UserType.Receptionist)
                 {
                     <li class="nav-item">
                         <a class="nav-link @Active("Reception", "Dashboard")"
@@ -148,7 +199,6 @@
                         </a>
                     </li>
 
-                    <!-- ✅ Chats (Receptionist ONLY) -->
                     <li class="nav-item">
                         <a class="nav-link @ActiveController("Chat")"
                            asp-controller="Chat" asp-action="Index">
@@ -160,7 +210,7 @@
                 @* =========================
                    Admin Menu (ONLY Admin)
                    ========================= *@
-                @if (userType == (int)UserType.Admin)
+                @if (resolvedUserType == (int)UserType.Admin)
                 {
                     <li class="nav-item">
                         <a class="nav-link @Active("Admin", "Dashboard")"
@@ -190,7 +240,6 @@
                         </a>
                     </li>
                 }
-
             </ul>
         </aside>
 
@@ -200,7 +249,16 @@
             <!-- Top Navbar -->
             <nav class="navbar navbar-expand-sm topbar">
                 <div class="container-fluid">
-                    <a class="navbar-brand" asp-controller="Home" asp-action="Index">SCMS</a>
+                    <a class="navbar-brand scms-brand"
+                       asp-controller="Home"
+                       asp-action="Index">
+
+                        <img src="~/images/logo.svg"
+                             class="scms-logo"
+                             alt="SCMS Logo" />
+
+                        <span>SCMS</span>
+                    </a>
 
                     <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                             data-bs-target="#navbarNav">
@@ -218,7 +276,7 @@
                                     </a>
                                 </li>
 
-                                @if (userType == (int)UserType.Patient)
+                                @if (resolvedUserType == (int)UserType.Patient)
                                 {
                                     <li class="nav-item">
                                         <a class="nav-link"
@@ -255,6 +313,25 @@
             </nav>
 
             <div class="page-container">
+
+                @if (TempData["CompleteInfoNotice"] != null)
+                {
+                    <div class="legacy-notice">
+                        <div class="legacy-notice-left">⚠️ <b>Attention:</b></div>
+
+                        <div class="legacy-notice-center">
+                            Please Complete Your Information
+                        </div>
+
+                        <div class="legacy-notice-right">
+                            <a class="btn btn-primary btn-sm"
+                               href="@TempData["CompleteInfoNotice"]">
+                                Complete Information
+                            </a>
+                        </div>
+                    </div>
+                }
+
                 @RenderBody()
             </div>
 
@@ -265,15 +342,16 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
+
     @if (TempData["ToastSuccess"] != null)
     {
         var toastId = Guid.NewGuid().ToString("N");
 
         <div id="toastSuccess" data-toast-id="@toastId"
              style="position:fixed; top:20px; right:20px; z-index:9999;
-                    background:#2e7d32; color:#fff; padding:12px 16px;
-                    border-radius:10px; box-shadow:0 6px 18px rgba(0,0,0,0.18);
-                    display:none;">
+                            background:#2e7d32; color:#fff; padding:12px 16px;
+                            border-radius:10px; box-shadow:0 6px 18px rgba(0,0,0,0.18);
+                            display:none;">
             @TempData["ToastSuccess"]
         </div>
 
@@ -285,7 +363,6 @@
                 const id = t.getAttribute('data-toast-id');
                 const key = 'toast_shown_' + id;
 
-                // ✅ لو الصفحة رجعت من back/forward cache، متعرضش التوست تاني
                 if (sessionStorage.getItem(key) === '1') {
                     t.remove();
                     return;
@@ -299,7 +376,5 @@
             })();
         </script>
     }
-
-
 </body>
 </html>

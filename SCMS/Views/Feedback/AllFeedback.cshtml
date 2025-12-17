@@ -1,25 +1,49 @@
 ﻿@model SCMS.ViewModels.FeedbackListVm
 
-<h2>All Feedbacks</h2>
+<h2 class="page-title">All Feedbacks</h2>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Patient</th>
-            <th>Rate</th>
-            <th>Feedback</th>
-            <th>Date</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var f in Model.Items)
-        {
-            <tr>
-                <td>@f.PatientName</td>
-                <td>@f.Rate</td>
-                <td>@f.FeedbackText</td>
-                <td>@f.CreatedAt.ToString("g")</td>
-            </tr>
-        }
-    </tbody>
-</table>
+<div class="card">
+    <div class="table-wrap">
+        <table class="fb-table">
+            <thead>
+                <tr>
+                    <th>Patient</th>
+                    <th>Rate</th>
+                    <th>Feedback</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model?.Items == null || !Model.Items.Any())
+                {
+                    <tr>
+                        <td colspan="4" class="empty">No feedbacks yet.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var f in Model.Items)
+                    {
+                        <tr>
+                            <td class="patient">@f.PatientName</td>
+
+                            <td>
+                                <div class="stars" aria-label="Rating @f.Rate out of 5">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        <span class="star @(i <= f.Rate ? "filled" : "")">★</span>
+                                    }
+                                    <span class="rate-num">(@f.Rate)</span>
+                                </div>
+                            </td>
+
+                            <td class="feedback">@f.FeedbackText</td>
+                            <td class="date">@f.CreatedAt.ToString("g")</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

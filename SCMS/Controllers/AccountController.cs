@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using SCMS.Models;
 using SCMS.ViewModels;
 using System.Security.Claims;
 using System.Security.Cryptography;
-using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using System.Text;
 
 namespace SCMS.Controllers
 {
@@ -203,25 +205,112 @@ namespace SCMS.Controllers
             return computed == stored;
         }
 
+        // =========================
+        // Forgot / Reset Password (Token + Expiry)
+        // =========================
+
+        private string GenerateResetToken()
+        {
+            return WebEncoders.Base64UrlEncode(RandomNumberGenerator.GetBytes(32));
+        }
+
+        private string Sha256Base64(string input)
+        {
+            using var sha = SHA256.Create();
+            var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(input));
+            return Convert.ToBase64String(bytes);
+        }
+
         [HttpGet]
         public IActionResult ForgotPassword()
         {
-            return View();
+            return View(new ForgotPasswordVm());
         }
 
         [HttpPost]
-        public async Task<IActionResult> ForgotPassword(string EmailOrUsername)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordVm vm)
         {
-            if (string.IsNullOrWhiteSpace(EmailOrUsername))
+            if (!ModelState.IsValid)
+                return View(vm);
+
+            var user = await _context.Users.FirstOrDefaultAsync(u =>
+                (u.Email == vm.EmailOrUsername || u.Username == vm.EmailOrUsername) && u.IsActive);
+
+            // رسالة موحدة (أمان) سواء موجود أو لا
+            TempData["Message"] = "If the account exists, reset instructions will be sent.";
+
+            if (user == null)
+                return RedirectToAction(nameof(Login));
+
+            var rawToken = GenerateResetToken();
+
+            user.PasswordResetTokenHash = Sha256Base64(rawToken);
+            user.PasswordResetTokenExpiryUtc = DateTime.UtcNow.AddMinutes(30);
+
+            await _context.SaveChangesAsync();
+
+            var resetUrl = Url.Action(
+                "ResetPassword",
+                "Account",
+                new { email = user.Email, token = rawToken },
+                protocol: Request.Scheme);
+
+            // ✅ DEV فقط: اعرض اللينك (بعد كده ابعته Email)
+            TempData["ResetLink"] = resetUrl;
+
+            return RedirectToAction(nameof(Login));
+        }
+
+        [HttpGet]
+        public IActionResult ResetPassword(string email, string token)
+        {
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(token))
+                return RedirectToAction(nameof(Login));
+
+            return View(new ResetPasswordVm
             {
-                ModelState.AddModelError("", "Please enter email or username");
-                return View();
+                Email = email,
+                Token = token
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordVm vm)
+        {
+            if (!ModelState.IsValid)
+                return View(vm);
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == vm.Email && u.IsActive);
+            if (user == null)
+            {
+                ModelState.AddModelError("", "Invalid reset link.");
+                return View(vm);
             }
 
-            await _context.Users.FirstOrDefaultAsync(u =>
-                (u.Email == EmailOrUsername || u.Username == EmailOrUsername) && u.IsActive);
+            if (user.PasswordResetTokenExpiryUtc == null || user.PasswordResetTokenExpiryUtc < DateTime.UtcNow)
+            {
+                ModelState.AddModelError("", "Reset link expired. Please request a new one.");
+                return View(vm);
+            }
 
-            TempData["Message"] = "If the account exists, reset instructions will be sent.";
+            var incomingHash = Sha256Base64(vm.Token);
+            if (string.IsNullOrWhiteSpace(user.PasswordResetTokenHash) || user.PasswordResetTokenHash != incomingHash)
+            {
+                ModelState.AddModelError("", "Invalid reset link.");
+                return View(vm);
+            }
+
+            user.PasswordHash = HashPassword(vm.NewPassword);
+
+            // invalidate token
+            user.PasswordResetTokenHash = null;
+            user.PasswordResetTokenExpiryUtc = null;
+
+            await _context.SaveChangesAsync();
+
+            TempData["Message"] = "Password reset successfully. Please login.";
             return RedirectToAction(nameof(Login));
         }
 

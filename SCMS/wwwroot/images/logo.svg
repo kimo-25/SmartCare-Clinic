@@ -1,0 +1,24 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 100 100"
+     width="100"
+     height="100">
+
+  <!-- Circle -->
+  <circle cx="50" cy="50" r="48" fill="#EAF4FB"/>
+
+  <!-- Heart -->
+  <path d="M50 72
+           C20 52, 28 30, 42 30
+           C48 30, 50 36, 50 36
+           C50 36, 52 30, 58 30
+           C72 30, 80 52, 50 72Z"
+        fill="#7EC3F4"/>
+
+  <!-- Heartbeat -->
+  <polyline points="18,52 36,52 42,44 50,62 58,48 64,52 82,52"
+            fill="none"
+            stroke="white"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"/>
+</svg>

@@ -1,5 +1,4 @@
 ﻿@model SCMS.ViewModels.ReceptionSlotsListVm
-
 @{
     ViewData["Title"] = "Clinic Slots";
 }
@@ -22,76 +21,98 @@
 
     <div class="card">
         <div class="card-body p-0">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Doctor</th>
-                        <th>Price</th>
-                        <th>Capacity</th>
-                        <th>Booked</th>
-                        <th>Remaining</th>
-                        <th>Status</th>
-                        <th style="width:260px;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (!Model.Slots.Any())
-                    {
-                        <tr><td colspan="9" class="text-center text-muted">No slots.</td></tr>
-                    }
-                    else
-                    {
-                        foreach (var s in Model.Slots)
+
+            <!-- ✅ Compact wrapper (لو عندك CSS table-compact) -->
+            <div class="table-compact">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Doctor</th>
+                            <th>Price</th>
+                            <th>Capacity</th>
+                            <th>Booked</th>
+                            <th>Remaining</th>
+                            <th>Status</th>
+                            <th style="width:260px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Slots.Any())
                         {
                             <tr>
-                                <td>@s.AppointmentDate.ToShortDateString()</td>
-                                <td>@s.StartTime - @s.EndTime</td>
-                                <td>@s.DoctorName</td>
-                                <td>@s.Price</td>
-                                <td>@s.Capacity</td>
-                                <td>@s.BookedCount</td>
-                                <td>@s.Remaining</td>
-                                <td>
-                                    <span class="badge @(s.Status == "Cancelled" ? "bg-danger" : s.Status == "Closed" ? "bg-warning text-dark" : "bg-success")">
-                                        @s.Status
-                                    </span>
-                                </td>
-                                <td class="d-flex gap-2 flex-wrap">
-                                    <a asp-action="SlotDetails" asp-route-id="@s.AppointmentId" class="btn btn-sm btn-dark">
-                                        Details
-                                    </a>
-
-                                    @if (s.CanBook)
-                                    {
-                                        <a asp-action="BookPatient" asp-route-appointmentId="@s.AppointmentId" class="btn btn-sm btn-primary">
-                                            Book Patient
-                                        </a>
-                                    }
-                                    else
-                                    {
-                                        <button class="btn btn-sm btn-secondary" disabled>Not Bookable</button>
-                                    }
-
-                                    @if (s.Status != "Cancelled")
-                                    {
-                                        <form asp-action="CancelSlot" method="post" class="m-0">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="appointmentId" value="@s.AppointmentId" />
-                                            <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
-                                            <button type="submit" class="btn btn-sm btn-danger"
-                                                    onclick="return confirm('Cancel this slot?');">
-                                                Cancel Slot
-                                            </button>
-                                        </form>
-                                    }
-                                </td>
+                                <td colspan="9" class="text-center text-muted">No slots.</td>
                             </tr>
                         }
-                    }
-                </tbody>
-            </table>
+                        else
+                        {
+                            foreach (var s in Model.Slots)
+                            {
+                                var rowClass =
+                                s.Status == "Cancelled" ? "row-cancelled" :
+                                s.Status == "Available" ? "row-available" : "";
+
+                                <tr class="@rowClass">
+                                    <td>@s.AppointmentDate.ToShortDateString()</td>
+                                    <td>@s.StartTime - @s.EndTime</td>
+                                    <td>@s.DoctorName</td>
+                                    <td>@s.Price</td>
+                                    <td>@s.Capacity</td>
+                                    <td>@s.BookedCount</td>
+                                    <td>@s.Remaining</td>
+                                    <td>
+                                        <span class="badge @(s.Status == "Cancelled" ? "bg-danger" : s.Status == "Closed" ? "bg-warning text-dark" : "bg-success")">
+                                            @s.Status
+                                        </span>
+                                    </td>
+
+                                    <!-- ✅ Actions شكلها أحلى ومترتب -->
+                                    <td class="actions-cell">
+                                        <div class="action-buttons">
+                                            <a asp-action="SlotDetails"
+                                               asp-route-id="@s.AppointmentId"
+                                               class="btn btn-sm btn-dark">
+                                                Details
+                                            </a>
+
+                                            @if (s.CanBook)
+                                            {
+                                                <a asp-action="BookPatient"
+                                                   asp-route-appointmentId="@s.AppointmentId"
+                                                   class="btn btn-sm btn-primary">
+                                                    Book Patient
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <button class="btn btn-sm btn-secondary" disabled>
+                                                    Not Bookable
+                                                </button>
+                                            }
+
+                                            @if (s.Status != "Cancelled")
+                                            {
+                                                <form asp-action="CancelSlot" method="post" class="m-0">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="appointmentId" value="@s.AppointmentId" />
+                                                    <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                                                    <button type="submit"
+                                                            class="btn btn-sm btn-danger"
+                                                            onclick="return confirm('Cancel this slot?');">
+                                                        Cancel Slot
+                                                    </button>
+                                                </form>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+
         </div>
     </div>
 </div>

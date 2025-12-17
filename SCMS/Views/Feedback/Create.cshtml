@@ -1,46 +1,95 @@
 ﻿@model SCMS.ViewModels.FeedbackFormVm
 
-<h2>Add Feedback</h2>
+<h2 class="page-title">Add Feedback</h2>
 
-<form asp-action="Create" method="post">
-    @Html.AntiForgeryToken()
+<div class="card form-card">
+    <form asp-action="Create" method="post" class="fb-form">
+        @Html.AntiForgeryToken()
 
-    <div class="form-group">
-        <label>Doctor</label>
-        <select asp-for="DoctorId"
-                asp-items="Model.Doctors"
-                class="form-control">
-            <option value="">-- Select Doctor --</option>
-        </select>
-        <span asp-validation-for="DoctorId" class="text-danger"></span>
-    </div>
+        <div class="field">
+            <label class="label">Doctor</label>
+            <select asp-for="DoctorId" asp-items="Model.Doctors" class="input">
+                <option value="">-- Select Doctor --</option>
+            </select>
+            <span asp-validation-for="DoctorId" class="text-danger"></span>
+        </div>
 
-    <div class="form-group mt-3">
-        <label asp-for="Rate"></label>
-        <select asp-for="Rate" class="form-control">
-            <option value="">-- Select Rate --</option>
-            <option value="1">1 ⭐</option>
-            <option value="2">2 ⭐⭐</option>
-            <option value="3">3 ⭐⭐⭐</option>
-            <option value="4">4 ⭐⭐⭐⭐</option>
-            <option value="5">5 ⭐⭐⭐⭐⭐</option>
-        </select>
-        <span asp-validation-for="Rate" class="text-danger"></span>
-    </div>
+        <div class="field">
+            <label class="label">Rate</label>
 
-    <div class="form-group mt-3">
-        <label asp-for="FeedbackText"></label>
-        <textarea asp-for="FeedbackText"
-                  class="form-control"
-                  rows="4"></textarea>
-        <span asp-validation-for="FeedbackText" class="text-danger"></span>
-    </div>
+            <!-- hidden input to bind Rate -->
+            <input asp-for="Rate" type="hidden" id="Rate" />
 
-    <button type="submit" class="btn btn-primary mt-4">
-        Submit
-    </button>
-</form>
+            <div class="star-picker" id="starPicker" role="radiogroup" aria-label="Rate">
+                @for (int i = 1; i <= 5; i++)
+                {
+                    <button type="button"
+                            class="pick-star"
+                            data-value="@i"
+                            aria-label="@i stars">
+                        ★
+                    </button>
+                }
+                <span class="hint" id="rateHint">Select a rating</span>
+            </div>
+
+            <span asp-validation-for="Rate" class="text-danger"></span>
+        </div>
+
+        <div class="field">
+            <label class="label" asp-for="FeedbackText"></label>
+            <textarea asp-for="FeedbackText" class="input" rows="4"
+                      placeholder="Write your feedback..."></textarea>
+            <span asp-validation-for="FeedbackText" class="text-danger"></span>
+        </div>
+
+        <div class="actions">
+            <button type="submit" class="btn-primary">
+                Submit
+            </button>
+            <a asp-action="Index" class="btn-ghost">Cancel</a>
+        </div>
+    </form>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        (function () {
+            const rateInput = document.getElementById("Rate");
+            const picker = document.getElementById("starPicker");
+            const stars = picker.querySelectorAll(".pick-star");
+            const hint = document.getElementById("rateHint");
+
+            function render(val) {
+                stars.forEach((b, idx) => {
+                    const on = (idx + 1) <= val;
+                    b.classList.toggle("filled", on);
+                });
+                hint.textContent = val ? `${val} / 5` : "Select a rating";
+            }
+
+            // initial (in case of validation postback)
+            const initial = parseInt(rateInput.value || "0");
+            render(initial);
+
+            stars.forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const v = parseInt(btn.dataset.value);
+                    rateInput.value = v;
+                    render(v);
+                });
+
+                // hover preview (optional nice touch)
+                btn.addEventListener("mouseenter", () => {
+                    render(parseInt(btn.dataset.value));
+                });
+            });
+
+            picker.addEventListener("mouseleave", () => {
+                render(parseInt(rateInput.value || "0"));
+            });
+        })();
+    </script>
 }

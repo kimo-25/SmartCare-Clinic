@@ -3,34 +3,37 @@
 <div class="patient-dashboard">
     <h2>Welcome, @Model.FullName</h2>
 
-    <!-- ===== Dashboard Header ===== -->
     <div class="dashboard-header">
-        <div>
+
+        <div class="dash-left">
             <h2 class="dash-title">Patient Dashboard</h2>
             <p class="dash-sub">Overview of your medical activity</p>
         </div>
 
-        <a class="btn btn-primary chat-btn"
-           asp-controller="Chat"
-           asp-action="Start">
-            💬 Chat with Clinic
-        </a>
+        <div class="dash-right">
+            <a class="btn btn-primary chat-btn"
+               asp-controller="Chat"
+               asp-action="Start">
+                💬 Chat with Clinic
+            </a>
+        </div>
 
-        @if (Model.IsProfileIncomplete)
-        {
-            <div class="profile-alert">
-                <strong>⚠️ Attention:</strong>
-                Please Complete Your Information
-
-                <a asp-controller="Patient"
-                   asp-action="Edit"
-                   asp-route-id="@Model.PatientId"
-                   class="btn-complete">
-                    Complete Information
-                </a>
-            </div>
-        }
     </div>
+
+    @if (Model.IsProfileIncomplete)
+    {
+        <div class="profile-alert">
+            <strong>⚠️ Attention:</strong>
+            Please Complete Your Information
+
+            <a asp-controller="Patient"
+               asp-action="Edit"
+               asp-route-id="@Model.PatientId"
+               class="btn-complete">
+                Complete Information
+            </a>
+        </div>
+    }
 
     </div> <!-- ✅ مهم: قفل dashboard-header -->
     <!-- ===== Stats Cards ===== -->
@@ -76,4 +79,3 @@
         </a>
 
     </div>
-</div>

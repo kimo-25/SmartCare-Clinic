@@ -1,0 +1,43 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - SCMS</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/clinic.css" asp-append-version="true" />
+    @RenderSection("Styles", required: false)
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-sm topbar">
+        <div class="container-fluid">
+            <a class="navbar-brand scms-brand"
+               asp-controller="Home"
+               asp-action="Index">
+
+                <img src="~/images/logo.svg"
+                     class="scms-logo"
+                     alt="SCMS Logo" />
+
+                <span>SCMS</span>
+            </a>
+
+            <div class="ms-auto d-flex gap-2">
+                <a class="btn btn-outline-primary btn-sm"
+                   asp-controller="Account" asp-action="Login">Login</a>
+                <a class="btn btn-outline-secondary btn-sm"
+                   asp-controller="Feedback" asp-action="Index">Feedbacks</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container py-4">
+        @RenderBody()
+    </main>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
