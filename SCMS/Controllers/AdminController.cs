@@ -36,7 +36,7 @@ namespace SCMS.Controllers
             if (CurrentUserType() != UserType.Admin)
                 return RedirectToAction("AccessDenied", "Account");
 
-            return null; // ✅ مهم
+            return null;
         }
 
         // ================= Dashboard =================
@@ -61,9 +61,10 @@ namespace SCMS.Controllers
                         UserId = u.UserId,
                         FullName = u.FullName,
                         Email = u.Email,
-                        Phone = u.Phone,
+                        Phone = u.Phone!,
                         UserType = EF.Property<string>(u, "Discriminator"),
-                        DateAdded = u.CreatedAt
+                        DateAdded = u.CreatedAt,
+                        IsActive = u.IsActive
                     })
                     .ToListAsync()
             };
@@ -84,9 +85,10 @@ namespace SCMS.Controllers
                     UserId = u.UserId,
                     FullName = u.FullName,
                     Email = u.Email,
-                    Phone = u.Phone,
+                    Phone = u.Phone!,
                     UserType = EF.Property<string>(u, "Discriminator"),
-                    DateAdded = u.CreatedAt
+                    DateAdded = u.CreatedAt,
+                    IsActive = u.IsActive
                 })
                 .ToListAsync();
 
@@ -126,6 +128,14 @@ namespace SCMS.Controllers
             var guard = RequireAdmin();
             if (guard != null) return guard;
 
+            var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "Admin", "Doctor", "Receptionist", "Radiologist", "Patient"
+            };
+
+            if (string.IsNullOrWhiteSpace(vm.UserType) || !allowed.Contains(vm.UserType))
+                ModelState.AddModelError(nameof(vm.UserType), "Please select a valid user type.");
+
             if (!ModelState.IsValid)
                 return View(vm);
 
@@ -135,7 +145,6 @@ namespace SCMS.Controllers
                 return View(vm);
             }
 
-            // Hash Password
             var salt = RandomNumberGenerator.GetBytes(16);
             var hash = Convert.ToBase64String(KeyDerivation.Pbkdf2(
                 vm.Password,
@@ -177,7 +186,6 @@ namespace SCMS.Controllers
             var guard = RequireAdmin();
             if (guard != null) return guard;
 
-            // ✅ عشان TPH يرجّع النوع الحقيقي
             var dbUser = await _context.Users.FirstOrDefaultAsync(u => u.UserId == id);
             if (dbUser == null) return NotFound();
 
@@ -194,10 +202,13 @@ namespace SCMS.Controllers
             var dbUser = await _context.Users.FirstOrDefaultAsync(u => u.UserId == model.UserId);
             if (dbUser == null) return NotFound();
 
-            // تحديث البيانات المشتركة
+            // ✅ تحديث البيانات المشتركة
             dbUser.FullName = model.FullName;
             dbUser.Email = model.Email;
             dbUser.Phone = model.Phone;
+
+            // ✅ مهم: حفظ IsActive من الفورم
+            dbUser.IsActive = model.IsActive;
 
             var currentType = dbUser.GetType().Name;
 
@@ -208,7 +219,7 @@ namespace SCMS.Controllers
                 return RedirectToAction(nameof(Users));
             }
 
-            // ✅ النوع اتغير: Remove + Add (TPH Discriminator لا يتغير بـ Update)
+            // ✅ النوع اتغير: Remove + Add
             var newUser = userType switch
             {
                 "Admin" => new Admin(),
@@ -225,7 +236,10 @@ namespace SCMS.Controllers
             newUser.Phone = dbUser.Phone;
             newUser.Username = dbUser.Username;
             newUser.PasswordHash = dbUser.PasswordHash;
-            newUser.IsActive = dbUser.IsActive;
+
+            // ✅ خد الحالة الجديدة اللي جاية من الفورم
+            newUser.IsActive = model.IsActive;
+
             newUser.CreatedAt = dbUser.CreatedAt;
 
             _context.Users.Remove(dbUser);
@@ -235,6 +249,47 @@ namespace SCMS.Controllers
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Users));
+        }
+
+        // ================= Delete User =================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteUser(int id)
+        {
+            var guard = RequireAdmin();
+            if (guard != null) return guard;
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == id);
+            if (user == null) return NotFound();
+
+            var hasRadiologyRefs = await _context.Set<RadiologyRequest>()
+                .AnyAsync(r => r.RadiologistId == id);
+
+            if (hasRadiologyRefs)
+            {
+                user.IsActive = false;
+                await _context.SaveChangesAsync();
+
+                TempData["Message"] = "User cannot be deleted because it has related radiology requests. User was deactivated instead.";
+                return RedirectToAction(nameof(Users));
+            }
+
+            try
+            {
+                _context.Users.Remove(user);
+                await _context.SaveChangesAsync();
+
+                TempData["Message"] = "User deleted successfully!";
+                return RedirectToAction(nameof(Users));
+            }
+            catch (DbUpdateException)
+            {
+                user.IsActive = false;
+                await _context.SaveChangesAsync();
+
+                TempData["Message"] = "User cannot be deleted because it has related data. User was deactivated instead.";
+                return RedirectToAction(nameof(Users));
+            }
         }
     }
 }

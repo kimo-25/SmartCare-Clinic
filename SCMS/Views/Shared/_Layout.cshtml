@@ -12,7 +12,9 @@
 
     var currentController = ViewContext.RouteData.Values["Controller"]?.ToString() ?? "";
     var currentAction = ViewContext.RouteData.Values["Action"]?.ToString() ?? "";
+
     string Active(string c, string a) => (currentController == c && currentAction == a) ? "active" : "";
+    string ActiveController(string c) => (currentController == c) ? "active" : "";
 }
 
 <!DOCTYPE html>
@@ -25,8 +27,6 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/clinic.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/SCMS.styles.css" asp-append-version="true" />
-
-    <!-- Sidebar/Layout CSS -->
     <link rel="stylesheet" href="~/css/sidebar.css" asp-append-version="true" />
 
     @RenderSection("Styles", required: false)
@@ -120,10 +120,18 @@
                             <span>🩻</span> <span>Radiology Requests</span>
                         </a>
                     </li>
+
+                    <!-- ✅ Chats (Receptionist ONLY) -->
+                    <li class="nav-item">
+                        <a class="nav-link @ActiveController("Chat")"
+                           asp-controller="Chat" asp-action="Index">
+                            <span>💬</span> <span>Chats</span>
+                        </a>
+                    </li>
                 }
 
                 @* =========================
-                   Admin Menu
+                   Admin Menu (ONLY Admin)
                    ========================= *@
                 @if (userType == (int)UserType.Admin)
                 {
@@ -134,10 +142,28 @@
                         </a>
                     </li>
 
-                    @* ضيف هنا أي حاجات Admin خاصة بيه *@
+                    <li class="nav-item">
+                        <a class="nav-link @Active("Admin", "Users")"
+                           asp-controller="Admin" asp-action="Users">
+                            <span>👥</span> <span>Users</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link @Active("Admin", "CreateUser")"
+                           asp-controller="Admin" asp-action="CreateUser">
+                            <span>➕</span> <span>Create User</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link @Active("Admin", "AppointmentsOverview")"
+                           asp-controller="Admin" asp-action="AppointmentsOverview">
+                            <span>📅</span> <span>Appointments Overview</span>
+                        </a>
+                    </li>
                 }
 
-                @* TODO: Doctor Menu / Radiologist Menu ... *@
             </ul>
         </aside>
 
@@ -156,6 +182,26 @@
 
                     <div class="collapse navbar-collapse" id="navbarNav">
                         <ul class="navbar-nav ms-auto align-items-center">
+                            @if (isLoggedIn)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link @ActiveController("Feedback")"
+                                       asp-controller="Feedback" asp-action="Index">
+                                        View Feedbacks
+                                    </a>
+                                </li>
+
+                                @if (userType == (int)UserType.Patient)
+                                {
+                                    <li class="nav-item">
+                                        <a class="nav-link"
+                                           asp-controller="Feedback" asp-action="Create">
+                                            Add Feedback
+                                        </a>
+                                    </li>
+                                }
+                            }
+
                             @if (isLoggedIn)
                             {
                                 <li class="nav-item">
@@ -188,7 +234,6 @@
         </main>
     </div>
 
-    <!-- Scripts -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

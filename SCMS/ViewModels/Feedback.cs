@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace SCMS.ViewModels
 {
@@ -12,24 +14,22 @@ namespace SCMS.ViewModels
         public string? FeedbackText { get; set; }
 
         public int DoctorId { get; set; }
+
+        // ✅ دي الجديدة (قائمة الدكاترة للـ dropdown)
+        public List<SelectListItem> Doctors { get; set; } = new();
     }
 
     public class FeedbackItemVm
     {
         public int FeedbackId { get; set; }
-
         public string PatientName { get; set; } = null!;
-
         public int Rate { get; set; }
-
         public string FeedbackText { get; set; } = "";
-
         public DateTime CreatedAt { get; set; }
     }
 
     public class FeedbackListVm
     {
-        public IEnumerable<FeedbackItemVm> Items { get; set; }
-            = new List<FeedbackItemVm>();
+        public IEnumerable<FeedbackItemVm> Items { get; set; } = new List<FeedbackItemVm>();
     }
 }

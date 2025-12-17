@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SCMS.BL.BLInterfaces;
 using SCMS.Models;
 using SCMS.ViewModels;
+using System.Linq;
 
 namespace SCMS.Controllers
 {
@@ -36,26 +37,88 @@ namespace SCMS.Controllers
             var type = CurrentUserType();
             if (userId == 0) return RedirectToAction("Login", "Account");
 
+            // Patient => يبدأ شات مباشرة
             if (type == UserType.Patient)
-            {
-                var threads = _chatService.GetThreadsForPatient(userId);
-                return View(threads);
-            }
+                return RedirectToAction(nameof(Start));
 
+            // Receptionist => Inbox
             if (type == UserType.Receptionist)
             {
-                var receptionistId = _context.Set<Receptionist>()
-                    .Where(r => r.UserId == userId)
-                    .Select(r => r.UserId)
-                    .FirstOrDefault();
+                var receptionist = _context.Set<Receptionist>()
+                    .AsNoTracking()
+                    .FirstOrDefault(r => r.UserId == userId);
 
-                if (receptionistId == 0) return NotFound();
+                if (receptionist == null) return NotFound();
 
-                var threads = _chatService.GetThreadsForReceptionist(receptionistId);
-                return View(threads);
+                var receptionistId = receptionist.UserId;
+
+                var unassignedThreads = _chatService.GetUnassignedThreads();
+                var myThreads = _chatService.GetThreadsForReceptionist(receptionistId);
+
+                var vm = new ChatInboxVm
+                {
+                    Unassigned = unassignedThreads.Select(t => new ChatThreadRowVm
+                    {
+                        ThreadId = t.ThreadId,
+                        PatientName = t.Patient?.FullName ?? "Unknown",
+                        CreatedAt = t.CreatedAt,
+                        LastMessageAt = t.LastMessageAt,
+                        // لسه unassigned => اعتبر أي messages غير مقروءة كـ unread
+                        UnreadCount = _context.ChatMessages.Count(m => m.ThreadId == t.ThreadId && !m.IsRead),
+                        IsAssigned = false
+                    }).ToList(),
+
+                    Mine = myThreads.Select(t => new ChatThreadRowVm
+                    {
+                        ThreadId = t.ThreadId,
+                        PatientName = t.Patient?.FullName ?? "Unknown",
+                        CreatedAt = t.CreatedAt,
+                        LastMessageAt = t.LastMessageAt,
+                        // هنا receiver = receptionistId
+                        UnreadCount = _chatService.GetUnreadCountForThread(t.ThreadId, receptionistId),
+                        IsAssigned = true
+                    }).ToList()
+                };
+
+                return View(vm);
             }
 
             return Forbid();
+        }
+
+        [HttpGet]
+        public IActionResult Start()
+        {
+            var userId = CurrentUserId();
+            var type = CurrentUserType();
+            if (userId == 0) return RedirectToAction("Login", "Account");
+            if (type != UserType.Patient) return Forbid();
+
+            var thread = _chatService.GetOrCreateThread(patientId: userId, receptionistId: null);
+            return RedirectToAction(nameof(Conversation), new { id = thread.ThreadId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Take(int id)
+        {
+            var userId = CurrentUserId();
+            var type = CurrentUserType();
+            if (userId == 0) return RedirectToAction("Login", "Account");
+            if (type != UserType.Receptionist) return Forbid();
+
+            var receptionist = _context.Set<Receptionist>()
+                .AsNoTracking()
+                .FirstOrDefault(r => r.UserId == userId);
+
+            if (receptionist == null) return NotFound();
+
+            var receptionistId = receptionist.UserId;
+
+            var ok = _chatService.AssignThreadToReceptionist(id, receptionistId);
+            if (!ok) return BadRequest("Cannot take this chat (already assigned/closed/not found)");
+
+            return RedirectToAction(nameof(Conversation), new { id });
         }
 
         [HttpGet]
@@ -105,6 +168,9 @@ namespace SCMS.Controllers
 
             if (vm.ConversationId <= 0) return BadRequest();
 
+            if (string.IsNullOrWhiteSpace(vm.NewMessageText))
+                return RedirectToAction(nameof(Conversation), new { id = vm.ConversationId });
+
             var thread = _chatService.GetThreadById(vm.ConversationId);
             if (thread == null) return NotFound();
 
@@ -125,16 +191,24 @@ namespace SCMS.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Start()
+        public IActionResult End(int id)
         {
             var userId = CurrentUserId();
             var type = CurrentUserType();
             if (userId == 0) return RedirectToAction("Login", "Account");
 
-            if (type != UserType.Patient) return Forbid();
+            var thread = _chatService.GetThreadById(id);
+            if (thread == null) return NotFound();
 
-            var thread = _chatService.GetOrCreateThread(patientId: userId, receptionistId: null);
-            return RedirectToAction(nameof(Conversation), new { id = thread.ThreadId });
+            if (!CanAccessThread(type, userId, thread))
+                return Forbid();
+
+            _chatService.CloseThread(id);
+
+            if (type == UserType.Patient)
+                return RedirectToAction("Dashboard", "Patient", new { id = userId });
+
+            return RedirectToAction(nameof(Index));
         }
 
         private bool CanAccessThread(UserType type, int userId, ChatThread thread)

@@ -16,19 +16,32 @@ namespace SCMS.BL.BLClasses
             _context = context;
         }
 
+        // ✅ أهم تعديل:
+        // لو receptionistId == null (المريض بيفتح الشات من زرار Start)
+        // هنجيب أي Thread "Open" للمريض سواء اتاخد من ريسيبشن أو لسه unassigned
         public ChatThread GetOrCreateThread(int patientId, int? receptionistId = null)
         {
-            var thread = _context.ChatThreads
-                .FirstOrDefault(t => t.PatientId == patientId &&
-                                     t.ReceptionistId == receptionistId &&
-                                     t.Status == "Open");
+            ChatThread? thread;
+
+            if (receptionistId == null)
+            {
+                thread = _context.ChatThreads
+                    .FirstOrDefault(t => t.PatientId == patientId && t.Status == "Open");
+            }
+            else
+            {
+                thread = _context.ChatThreads
+                    .FirstOrDefault(t => t.PatientId == patientId &&
+                                         t.ReceptionistId == receptionistId &&
+                                         t.Status == "Open");
+            }
 
             if (thread != null) return thread;
 
             thread = new ChatThread
             {
                 PatientId = patientId,
-                ReceptionistId = receptionistId,
+                ReceptionistId = receptionistId, // غالبًا null
                 Status = "Open",
                 CreatedAt = DateTime.UtcNow
             };
@@ -62,6 +75,30 @@ namespace SCMS.BL.BLClasses
                 .OrderByDescending(t => t.LastMessageAt ?? t.CreatedAt)
                 .Include(t => t.Patient)
                 .ToList();
+        }
+
+        // ✅ Unassigned (Receptionist Inbox)
+        public List<ChatThread> GetUnassignedThreads()
+        {
+            return _context.ChatThreads
+                .Where(t => t.ReceptionistId == null && t.Status == "Open")
+                .OrderByDescending(t => t.LastMessageAt ?? t.CreatedAt)
+                .Include(t => t.Patient)
+                .ToList();
+        }
+
+        // ✅ Take / Assign
+        public bool AssignThreadToReceptionist(int threadId, int receptionistId)
+        {
+            var thread = _context.ChatThreads.FirstOrDefault(t => t.ThreadId == threadId);
+            if (thread == null) return false;
+
+            if (thread.Status == "Closed") return false;
+            if (thread.ReceptionistId.HasValue) return false; // already taken
+
+            thread.ReceptionistId = receptionistId;
+            _context.SaveChanges();
+            return true;
         }
 
         public List<ChatMessage> GetMessages(int threadId, int take = 100, int skip = 0)
@@ -125,10 +162,18 @@ namespace SCMS.BL.BLClasses
             return message;
         }
 
-
         public int GetUnreadCountForUser(int userId)
         {
             return _context.ChatMessages.Count(m => m.ReceiverUserId == userId && !m.IsRead);
+        }
+
+        public int GetUnreadCountForThread(int threadId, int receiverUserId)
+        {
+            return _context.ChatMessages.Count(m =>
+                m.ThreadId == threadId &&
+                m.ReceiverUserId == receiverUserId &&
+                !m.IsRead
+            );
         }
 
         public bool MarkThreadAsRead(int threadId, int userId)

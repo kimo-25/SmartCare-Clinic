@@ -11,6 +11,8 @@ namespace SCMS.ViewModels
         public string UserType { get; set; } = null!;
         public string Phone { get; set; } = null!;
         public DateTime DateAdded { get; set; }
+        public bool IsActive { get; set; }
+
     }
 
     public class AdminDashboardVm

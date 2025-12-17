@@ -16,6 +16,10 @@
         <div asp-validation-summary="All" class="text-danger mb-2"></div>
 
         <form asp-action="Register" method="post" novalidate>
+            @Html.AntiForgeryToken()
+
+            <!-- ✅ External signup = Patient only -->
+            <input type="hidden" asp-for="UserType" value="Patient" />
 
             <div class="mb-2">
                 <label asp-for="FullName" class="form-label mb-1">Full Name</label>
@@ -52,24 +56,11 @@
                 <span asp-validation-for="Password" class="text-danger small"></span>
             </div>
 
-            <div class="mb-2">
+            <div class="mb-3">
                 <label asp-for="ConfirmPassword" class="form-label mb-1">Confirm Password</label>
                 <input asp-for="ConfirmPassword" type="password" class="form-control form-control-sm"
                        placeholder="Confirm your password" required />
                 <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
-            </div>
-
-            <div class="mb-3">
-                <label asp-for="UserType" class="form-label mb-1">User Type</label>
-                <select asp-for="UserType" class="form-select form-select-sm" required>
-                    <option value="">-- Select User Type --</option>
-                    <option value="Patient">Patient</option>
-                    <option value="Doctor">Doctor</option>
-                    <option value="Receptionist">Receptionist</option>
-                    <option value="Radiologist">Radiologist</option>
-                    <option value="Admin">Admin</option>
-                </select>
-                <span asp-validation-for="UserType" class="text-danger small"></span>
             </div>
 
             <button type="submit" class="btn btn-primary w-100 btn-sm">

@@ -5,32 +5,72 @@
     Layout = "_Layout";
 }
 
-<div class="container" style="max-width:500px; margin-top:60px;">
-    <div class="card" style="padding:30px; text-align:center;">
-        <h1 style="color: var(--primary); font-size:28px; margin-bottom:20px;">✏️ Edit User</h1>
+<div class="container" style="max-width: 520px; margin-top: 60px;">
+    <div class="card">
+        <h1 class="text-center mb-4" style="color: var(--primary); font-size: 26px;">
+            ✏️ Edit User
+        </h1>
 
-        <form asp-controller="Admin" asp-action="EditUser" method="post">
+        <form asp-action="EditUser" method="post" novalidate>
             @Html.AntiForgeryToken()
             <input type="hidden" asp-for="UserId" />
 
-            <label asp-for="FullName"></label>
-            <input asp-for="FullName" placeholder="Enter full name" required />
+            <div class="mb-3">
+                <label asp-for="FullName" class="form-label">Full Name</label>
+                <input asp-for="FullName" class="form-control" placeholder="Enter full name" required />
+                <span asp-validation-for="FullName" class="text-danger"></span>
+            </div>
 
-            <label asp-for="Email"></label>
-            <input asp-for="Email" type="email" placeholder="Enter email" required />
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label">Email</label>
+                <input asp-for="Email" type="email" class="form-control" placeholder="Enter email" required />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
 
-            <label asp-for="Phone"></label>
-            <input asp-for="Phone" placeholder="Enter phone number" />
+            <div class="mb-3">
+                <label asp-for="Phone" class="form-label">Phone</label>
+                <input asp-for="Phone" class="form-control" placeholder="Enter phone number" />
+            </div>
 
-            <label>User Type</label>
-            <input value="@Model.UserType" disabled />
+            <div class="mb-3">
+                <label class="form-label">User Type</label>
+                <select name="userType" class="form-select" required>
+                    <option value="Admin" selected="@(Model.GetType().Name == "Admin")">Admin</option>
+                    <option value="Doctor" selected="@(Model.GetType().Name == "Doctor")">Doctor</option>
+                    <option value="Receptionist" selected="@(Model.GetType().Name == "Receptionist")">Receptionist</option>
+                    <option value="Radiologist" selected="@(Model.GetType().Name == "Radiologist")">Radiologist</option>
+                    <option value="Patient" selected="@(Model.GetType().Name == "Patient")">Patient</option>
+                </select>
+            </div>
 
-            <button type="submit" class="btn btn-primary" style="margin-top:20px;">Update User</button>
+            <!-- ✅ Active / Inactive -->
+            <div class="mb-4 d-flex align-items-center justify-content-between p-2"
+                 style="border: 1px solid var(--border); border-radius: 12px;">
+                <div>
+                    <div style="font-weight:700;">Account Status</div>
+                    <small style="color: var(--text-muted);">
+                        Disable user instead of deleting when it has related data.
+                    </small>
+                </div>
+
+                <div class="form-check form-switch m-0">
+                    <input class="form-check-input" type="checkbox" asp-for="IsActive" />
+                    <label class="form-check-label" asp-for="IsActive">
+                        @(Model.IsActive ? "Active" : "Inactive")
+                    </label>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 justify-content-center">
+                <button type="submit" class="btn btn-primary">
+                    Update User
+                </button>
+
+                <a asp-action="Users" class="btn btn-secondary">
+                    Back
+                </a>
+            </div>
         </form>
-
-        <div style="margin-top:15px;">
-            <a asp-controller="Admin" asp-action="Users" class="btn btn-secondary">Back to Users List</a>
-        </div>
     </div>
 </div>
 

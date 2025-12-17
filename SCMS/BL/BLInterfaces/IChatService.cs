@@ -11,13 +11,21 @@ namespace SCMS.BL.BLInterfaces
         List<ChatThread> GetThreadsForPatient(int patientId);
         List<ChatThread> GetThreadsForReceptionist(int receptionistId);
 
-        List<ChatMessage> GetMessages(int threadId, int take = 100, int skip = 0);
-        ChatMessage? SendMessage(int threadId, int senderUserId, string content, int? receiverUserId = null);
+        // ✅ Reception Inbox
+        List<ChatThread> GetUnassignedThreads();
+        bool AssignThreadToReceptionist(int threadId, int receptionistId);
 
+        // ✅ Unread
         int GetUnreadCountForUser(int userId);
+        int GetUnreadCountForThread(int threadId, int receiverUserId);
         bool MarkThreadAsRead(int threadId, int userId);
 
+        // ✅ Thread lifecycle
         bool CloseThread(int threadId);
         bool ReopenThread(int threadId);
+
+        // ✅ Messages
+        List<ChatMessage> GetMessages(int threadId, int take = 100, int skip = 0);
+        ChatMessage? SendMessage(int threadId, int senderUserId, string content, int? receiverUserId = null);
     }
 }

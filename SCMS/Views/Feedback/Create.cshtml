@@ -1,15 +1,22 @@
 ﻿@model SCMS.ViewModels.FeedbackFormVm
 
-<h2>Give Feedback to Doctor</h2>
+<h2>Add Feedback</h2>
 
-<form asp-action="SubmitFeedback" method="post">
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
 
-    <!-- DoctorId (Hidden) -->
-    <input type="hidden" asp-for="DoctorId" />
-
-    <!-- Rate -->
     <div class="form-group">
-        <label asp-for="Rate">Rate (1 to 5)</label>
+        <label>Doctor</label>
+        <select asp-for="DoctorId"
+                asp-items="Model.Doctors"
+                class="form-control">
+            <option value="">-- Select Doctor --</option>
+        </select>
+        <span asp-validation-for="DoctorId" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mt-3">
+        <label asp-for="Rate"></label>
         <select asp-for="Rate" class="form-control">
             <option value="">-- Select Rate --</option>
             <option value="1">1 ⭐</option>
@@ -21,21 +28,17 @@
         <span asp-validation-for="Rate" class="text-danger"></span>
     </div>
 
-    <!-- Feedback Text -->
     <div class="form-group mt-3">
-        <label asp-for="FeedbackText">Your Feedback</label>
+        <label asp-for="FeedbackText"></label>
         <textarea asp-for="FeedbackText"
                   class="form-control"
-                  rows="4"
-                  placeholder="Write your feedback..."></textarea>
+                  rows="4"></textarea>
         <span asp-validation-for="FeedbackText" class="text-danger"></span>
     </div>
 
-    <!-- Submit -->
     <button type="submit" class="btn btn-primary mt-4">
-        Submit Feedback
+        Submit
     </button>
-
 </form>
 
 @section Scripts {

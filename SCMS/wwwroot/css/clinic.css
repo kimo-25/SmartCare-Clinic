@@ -1,6 +1,6 @@
 ﻿/* ==============================
    Smart Clinic Management System
-   Unified Design System (Refined)
+   Unified Design System (Safe Refactor)
    ============================== */
 
 /* ===== Root Variables ===== */
@@ -41,7 +41,7 @@ body {
     margin: auto;
 }
 
-/* ===== Layout Shell (Layout.cshtml) ===== */
+/* ===== Layout Shell ===== */
 .app-shell {
     display: flex;
     min-height: 100vh;
@@ -123,11 +123,12 @@ h3 {
 
 /* ===== Sidebar ===== */
 .sidebar {
-    width: 260px;
-    background: #ffffff;
+    width: 280px;
+    background: #fff;
+    border-right: 1px solid rgba(0,0,0,.08);
     min-height: 100vh;
     box-shadow: var(--shadow);
-    padding: 22px 16px;
+    padding: 18px 14px;
 }
 
 .brand {
@@ -162,32 +163,39 @@ h3 {
     margin-bottom: 8px;
     color: var(--text-main);
     text-decoration: none;
-    border-radius: var(--radius);
+    border-radius: 12px;
     font-weight: 600;
     transition: all .25s ease;
 }
 
-    .sidebar a.nav-link.active,
+    /* ✅ Active أخف من Hover (أوضح) */
+    .sidebar a.nav-link.active {
+        background: rgba(30,136,229,0.14);
+        color: var(--primary);
+        font-weight: 800;
+    }
+
     .sidebar a.nav-link:hover {
-        background: var(--primary);
-        color: #fff;
+        background: rgba(30,136,229,0.10);
+        color: var(--primary);
     }
 
 /* ===== Buttons (Unified) ===== */
+/* ✅ اتلغى التكرار بتاع btn-primary/secondary اللي كان تحت */
 .btn {
-    padding: 10px 22px;
+    padding: 10px 18px;
     border: none;
-    border-radius: 30px;
+    border-radius: 14px;
     cursor: pointer;
     font-size: 14px;
-    font-weight: 600;
-    transition: all .25s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    text-decoration: none;
-    white-space: nowrap;
+    font-weight: 650;
+    transition: all .2s ease;
+}
+
+.btn-sm {
+    padding: 6px 12px !important;
+    border-radius: 12px !important;
+    font-size: 13px !important;
 }
 
 .btn-primary {
@@ -197,76 +205,35 @@ h3 {
 
     .btn-primary:hover {
         background: var(--primary-dark);
-        transform: translateY(-1px);
-    }
-
-.btn-outline {
-    background: transparent;
-    border: 2px solid var(--primary);
-    color: var(--primary);
-}
-
-    .btn-outline:hover {
-        background: var(--primary);
-        color: #fff;
     }
 
 .btn-secondary {
     background: #eceff1;
-    color: var(--text-main);
-    border: 1px solid var(--border);
+    color: #263238;
+    border: 1px solid #e0e0e0;
 }
 
     .btn-secondary:hover {
         opacity: .92;
     }
 
-/* ===== Forms (Unified) ===== */
-label {
-    font-weight: 700;
-    color: var(--text-main);
-    margin-bottom: 6px;
-    display: inline-block;
+.btn-success {
+    background: var(--success);
+    color: #fff;
 }
 
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="number"],
-input[type="date"],
-select,
-textarea,
-.form-control {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    outline: none;
-    background: #fff;
-    color: var(--text-main);
-}
-
-    input:focus,
-    select:focus,
-    textarea:focus,
-    .form-control:focus {
-        border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(30,136,229,0.12);
+    .btn-success:hover {
+        opacity: .92;
     }
 
-.text-danger {
-    color: var(--danger);
-    font-size: 0.9rem;
+.btn-danger {
+    background: var(--danger);
+    color: #fff;
 }
 
-.form-alert {
-    background: #fff3cd;
-    border: 1px solid #ffeeba;
-    color: #856404;
-    padding: 12px 14px;
-    border-radius: 10px;
-    margin-top: 12px;
-}
+    .btn-danger:hover {
+        opacity: .92;
+    }
 
 /* ===== Soft Header ===== */
 .soft-header {
@@ -287,15 +254,38 @@ textarea,
     .table td {
         padding: 14px 16px;
         border-bottom: 1px solid var(--border);
+        vertical-align: middle;
     }
 
     .table th {
         background: #f3f6fa;
-        font-weight: 700;
+        font-weight: 800;
     }
 
     .table tr:hover {
         background: #f9fbff;
+    }
+
+/* ✅ Actions ثابتة ومش بتتكسر */
+td.actions-cell {
+    white-space: nowrap;
+    width: 1%;
+}
+
+    td.actions-cell .action-buttons {
+        display: inline-flex !important;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: nowrap !important;
+    }
+
+    td.actions-cell form {
+        display: inline-block !important;
+        margin: 0 !important;
+    }
+
+    td.actions-cell .btn {
+        white-space: nowrap;
     }
 
 /* ===== Badges ===== */
@@ -303,7 +293,7 @@ textarea,
     padding: 6px 14px;
     border-radius: 20px;
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 800;
 }
 
 .badge-success {
@@ -343,7 +333,7 @@ textarea,
 
     .dashboard-card span {
         font-size: 32px;
-        font-weight: 800;
+        font-weight: 900;
         color: var(--primary);
     }
 
@@ -352,78 +342,38 @@ textarea,
         opacity: .2;
     }
 
-/* ===== Profile Completion Alert ===== */
-.profile-alert {
-    background: #fff3cd;
-    border: 1px solid #ffeeba;
-    color: #856404;
-    padding: 12px 14px;
-    border-radius: 12px;
-    margin: 15px 0 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-.btn-complete {
-    background: var(--primary);
-    color: white;
-    padding: 8px 12px;
+/* ===== Forms ===== */
+.form-control {
+    padding: 10px 12px;
+    border: 1px solid #e0e0e0;
     border-radius: 10px;
-    text-decoration: none;
-    font-weight: 700;
-    display: inline-flex;
+    outline: none;
+}
+
+    .form-control:focus {
+        border-color: #1e88e5;
+        box-shadow: 0 0 0 3px rgba(30,136,229,0.12);
+    }
+
+.text-danger {
+    color: #c62828;
+    font-size: 0.9rem;
+}
+
+/* ===== Auth ===== */
+.auth-page {
+    min-height: 100vh;
+    display: flex;
     align-items: center;
+    justify-content: center;
+    padding: 24px 12px;
 }
 
-    .btn-complete:hover {
-        opacity: .9;
-    }
-
-/* ===== Edit Pages (Patient/Doctor) ===== */
-.patient-edit,
-.doctor-edit {
-    max-width: 900px;
-    margin: 30px auto;
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-}
-
-.edit-form .form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-    margin-top: 15px;
-}
-
-.edit-form .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-    .edit-form .form-group.full {
-        grid-column: 1 / -1;
-    }
-
-.form-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 18px;
-    flex-wrap: wrap;
-}
-
-/* ===== Footer ===== */
-.footer {
-    background: #0d1b2a;
-    color: #e0e0e0;
-    padding: 22px;
-    text-align: center;
-    font-size: 14px;
+.auth-card {
+    width: 100%;
+    max-width: 520px;
+    padding: 20px 18px;
+    border-radius: 14px;
 }
 
 /* ===== Responsive ===== */
@@ -440,22 +390,16 @@ textarea,
     .navbar {
         flex-direction: column;
         align-items: flex-start;
-        gap: 10px;
     }
+}
 
-    .page-container {
-        padding: 16px;
+/* ✅ على الموبايل الصغير نسمح للأزرار تلف */
+@media (max-width: 520px) {
+    td.actions-cell .action-buttons {
+        flex-wrap: wrap !important;
     }
-
-    .edit-form .form-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .patient-dashboard .stats,
-    .doctor-dashboard .stats {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 14px;
-        margin-top: 16px;
-    }
+}
+.row-inactive {
+    opacity: 0.65;
+    background: #fff8e1 !important;
 }

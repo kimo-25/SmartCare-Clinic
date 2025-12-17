@@ -49,12 +49,17 @@ namespace SCMS.Controllers
         [HttpGet]
         public IActionResult Register()
         {
-            return View(new RegisterVm());
+            // 👇 من برا Register = Patient فقط
+            return View(new RegisterVm { UserType = "Patient" });
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterVm vm)
         {
+            // ✅ أمان: تجاهل أي قيمة جاية من الفورم
+            vm.UserType = "Patient";
+
             if (!ModelState.IsValid)
                 return View(vm);
 
@@ -66,54 +71,21 @@ namespace SCMS.Controllers
 
             string passwordHash = HashPassword(vm.Password);
 
-            User user = vm.UserType switch
+            // ✅ خارجي = Patient فقط
+            User user = new Patient
             {
-                "Patient" => new Patient
-                {
-                    Gender = "Unknown",
-                    Address = "N/A",
-                    DateOfBirth = DateTime.Today,
-                    Age = 0
-                },
+                Gender = "Unknown",
+                Address = "N/A",
+                DateOfBirth = DateTime.Today,
+                Age = 0,
 
-                "Doctor" => new Doctor
-                {
-                    DepartmentName = "General",
-                    PhoneNumber = vm.Phone,
-                    Specialization = "General",
-                    YearsOfExperience = 0,
-                    Salary = 0
-                },
-
-                "Receptionist" => new Receptionist
-                {
-                    DepartmentName = "Reception",
-                    PhoneNumber = vm.Phone,
-                    Shift = "Morning",
-                    Salary = 0
-                },
-
-                "Radiologist" => new Radiologist
-                {
-                    DepartmentName = "Radiology",
-                    PhoneNumber = vm.Phone,
-                    Salary = 0
-                },
-
-                "Admin" => new Admin
-                {
-                    AccessLevel = "Full"
-                },
-
-                _ => new User()
+                FullName = vm.FullName,
+                Email = vm.Email,
+                Phone = vm.Phone,
+                Username = vm.Username,
+                PasswordHash = passwordHash,
+                IsActive = true
             };
-
-            user.FullName = vm.FullName;
-            user.Email = vm.Email;
-            user.Phone = vm.Phone;
-            user.Username = vm.Username;
-            user.PasswordHash = passwordHash;
-            user.IsActive = true;
 
             try
             {

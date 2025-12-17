@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SCMS.Models;
 using SCMS.ViewModels;
@@ -26,8 +27,13 @@ namespace SCMS.Controllers
             return t.HasValue ? (UserType)t.Value : UserType.User;
         }
 
+        // ✅ All Feedbacks
         public async Task<IActionResult> Index()
         {
+            var userId = CurrentUserId();
+            if (userId == 0)
+                return RedirectToAction("Login", "Account");
+
             var feedbacks = await _context.Feedbacks
                 .Include(f => f.Patient)
                 .Include(f => f.Doctor)
@@ -46,22 +52,13 @@ namespace SCMS.Controllers
                 }).ToList()
             };
 
-            return View(vm);
+            return View("AllFeedback", vm);
         }
 
+        // ✅ Add Feedback (Patient only) + load doctors list
         [HttpGet]
-        public IActionResult Create(int doctorId)
+        public async Task<IActionResult> Create()
         {
-            return View(new FeedbackFormVm { DoctorId = doctorId });
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(FeedbackFormVm vm)
-        {
-            if (!ModelState.IsValid)
-                return View(vm);
-
             var userId = CurrentUserId();
             if (userId == 0)
                 return RedirectToAction("Login", "Account");
@@ -69,30 +66,94 @@ namespace SCMS.Controllers
             if (CurrentUserType() != UserType.Patient)
                 return Forbid();
 
-            var patientExists = await _context.Set<Patient>().AnyAsync(p => p.UserId == userId);
+            var doctors = await _context.Set<Doctor>()
+                .Select(d => new { d.UserId, d.FullName })
+                .ToListAsync();
+
+            var vm = new FeedbackFormVm
+            {
+                Doctors = doctors.Select(d => new SelectListItem
+                {
+                    Value = d.UserId.ToString(),   // ✅ Doctor UserId
+                    Text = d.FullName
+                }).ToList()
+            };
+
+            return View(vm);
+        }
+
+        // ✅ Save Feedback (Patient only)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(FeedbackFormVm vm)
+        {
+            var userId = CurrentUserId();
+            if (userId == 0)
+                return RedirectToAction("Login", "Account");
+
+            if (CurrentUserType() != UserType.Patient)
+                return Forbid();
+
+            // لازم DoctorId يتعمله validation (عشان dropdown)
+            if (vm.DoctorId <= 0)
+                ModelState.AddModelError(nameof(vm.DoctorId), "Please select a doctor.");
+
+            if (!ModelState.IsValid)
+            {
+                // ✅ رجّع قائمة الدكاترة تاني (بدون anonymous type)
+                vm.Doctors = await _context.Set<Doctor>()
+                    .Select(d => new SelectListItem
+                    {
+                        Value = d.UserId.ToString(),
+                        Text = d.FullName
+                    })
+                    .ToListAsync();
+
+                return View(vm);
+            }
+
+            var patientExists = await _context.Set<Patient>()
+                .AnyAsync(p => p.UserId == userId);
+
             if (!patientExists)
             {
                 ModelState.AddModelError("", "هذا المستخدم ليس Patient.");
+
+                // ✅ لازم كمان نرجّع الدكاترة عشان الصفحة متتكسرش
+                vm.Doctors = await _context.Set<Doctor>()
+                    .Select(d => new SelectListItem
+                    {
+                        Value = d.UserId.ToString(),
+                        Text = d.FullName
+                    })
+                    .ToListAsync();
+
                 return View(vm);
             }
 
-            if (vm.DoctorId <= 0)
-            {
-                ModelState.AddModelError("", "DoctorId غير صحيح.");
-                return View(vm);
-            }
+            var doctorExists = await _context.Set<Doctor>()
+                .AnyAsync(d => d.UserId == vm.DoctorId);
 
-            var doctorExists = await _context.Set<Doctor>().AnyAsync(d => d.UserId == vm.DoctorId);
             if (!doctorExists)
             {
                 ModelState.AddModelError("", "Doctor غير موجود.");
+
+                // ✅ لازم كمان نرجّع الدكاترة
+                vm.Doctors = await _context.Set<Doctor>()
+                    .Select(d => new SelectListItem
+                    {
+                        Value = d.UserId.ToString(),
+                        Text = d.FullName
+                    })
+                    .ToListAsync();
+
                 return View(vm);
             }
 
             var feedback = new Feedback
             {
-                PatientId = userId,
-                DoctorId = vm.DoctorId,
+                PatientId = userId,      // ✅ Patient UserId
+                DoctorId = vm.DoctorId,  // ✅ Doctor UserId
                 Rate = vm.Rate,
                 FeedbackText = vm.FeedbackText,
                 CreatedAt = DateTime.UtcNow

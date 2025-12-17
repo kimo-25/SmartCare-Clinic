@@ -1,0 +1,93 @@
+﻿@model SCMS.ViewModels.ChatInboxVm
+@{
+    ViewData["Title"] = "Chat Inbox";
+}
+
+<h2>💬 Chat Inbox</h2>
+
+<div class="dashboard-cards" style="margin-top:16px;">
+    <div class="card">
+        <h3>New Chats (Unassigned)</h3>
+
+        @if (!Model.Unassigned.Any())
+        {
+            <p class="text-muted">No new chats right now.</p>
+        }
+        else
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Patient</th>
+                        <th>Created</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model.Unassigned)
+                    {
+                        <tr>
+                            <td>
+                                @t.PatientName
+                                @if (t.UnreadCount > 0)
+                                {
+                                    <span class="badge bg-danger ms-2">@t.UnreadCount</span>
+                                }
+                            </td>
+                            <td>@t.CreatedAt.ToLocalTime().ToString("g")</td>
+                            <td style="text-align:right;">
+                                <form asp-controller="Chat" asp-action="Take" method="post" style="display:inline;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@t.ThreadId" />
+                                    <button class="btn btn-primary btn-sm" type="submit">Take</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+
+    <div class="card">
+        <h3>My Chats</h3>
+
+        @if (!Model.Mine.Any())
+        {
+            <p class="text-muted">No assigned chats.</p>
+        }
+        else
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Patient</th>
+                        <th>Last Message</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model.Mine)
+                    {
+                        <tr>
+                            <td>
+                                @t.PatientName
+                                @if (t.UnreadCount > 0)
+                                {
+                                    <span class="badge bg-danger ms-2">@t.UnreadCount</span>
+                                }
+                            </td>
+                            <td>@(t.LastMessageAt?.ToLocalTime().ToString("g") ?? t.CreatedAt.ToLocalTime().ToString("g"))</td>
+                            <td style="text-align:right;">
+                                <a class="btn btn-outline btn-sm"
+                                   asp-controller="Chat" asp-action="Conversation" asp-route-id="@t.ThreadId">
+                                    Open
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
