@@ -1,21 +1,45 @@
 ﻿@model SCMS.ViewModels.Patient.PatientVM
-
+@{
+    var list = ViewBag.PrescriptionsList as List<SCMS.ViewModels.Patient.PatientPrescriptionRowVm>
+               ?? new List<SCMS.ViewModels.Patient.PatientPrescriptionRowVm>();
+}
 <link rel="stylesheet" href="~/css/clinic.css" />
 
-<div class="patient-prescriptions">
-    <h2>💊 Prescriptions</h2>
+<div class="page-container">
+    <div class="soft-header">
+        <h2>💊 Prescriptions</h2>
+    </div>
 
     <div class="card mt-3">
-        <p>
-            <strong>Total Prescriptions:</strong>
-            <span class="badge badge-warning">
-                @Model.PrescriptionsCount
-            </span>
-        </p>
-
-        <p class="text-muted mt-2">
-            Prescriptions are issued by doctors and include medication details,
-            dosage instructions, and treatment duration.
-        </p>
+        @if (!list.Any())
+        {
+            <div class="alert alert-info">No prescriptions found.</div>
+        }
+        else
+        {
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Doctor</th>
+                        <th>Diagnosis</th>
+                        <th>Treatment</th>
+                        <th>Radiology</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in list)
+                    {
+                        <tr>
+                            <td>@p.CreatedAt.ToString("dd/MM/yyyy")</td>
+                            <td>@p.DoctorName</td>
+                            <td>@p.Diagnosis</td>
+                            <td>@p.Treatment</td>
+                            <td>@(p.RadiologyRequested ? "Yes" : "No")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
     </div>
 </div>

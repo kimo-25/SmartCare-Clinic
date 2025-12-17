@@ -63,6 +63,51 @@ namespace SCMS.BL.BLClasses
                 .OrderByDescending(i => i.CreatedAt)
                 .ToList();
         }
+        public bool AddRadiologyFeeForCompletedResult(int requestId, double feePerResult = 500)
+        {
+            // هات الريكويست + الدكتور + المريض + النتيجة
+            var req = _context.RadiologyRequests
+                .Include(r => r.Result)
+                .FirstOrDefault(r => r.RequestId == requestId);
+
+            if (req == null) return false;
+            if (req.Result == null) return false;
+            if (req.Result.Status != "Completed") return false;
+
+            // هات آخر booking للمريض عند نفس الدكتور
+            var booking = _context.AppointmentBookings
+                .Include(b => b.Invoice)
+                .Include(b => b.Appointment)
+                .Where(b =>
+                    b.PatientId == req.PatientId &&
+                    b.Appointment.DoctorId == req.DoctorId &&
+                    b.Status == "Booked")
+                .OrderByDescending(b => b.CreatedAt)
+                .FirstOrDefault();
+
+            if (booking == null) return false;
+
+            // لو مفيش invoice اعمل واحدة
+            var invoice = booking.Invoice;
+            if (invoice == null)
+            {
+                invoice = new Invoice
+                {
+                    BookingId = booking.BookingId,
+                    TotalAmount = booking.Appointment.Price,
+                    Status = "Not Billed yet"
+                };
+                _context.Invoices.Add(invoice);
+                _context.SaveChanges();
+            }
+
+            // ✅ زوّد 500
+            invoice.TotalAmount += feePerResult;
+            invoice.Status = "Updated (Radiology)";
+            _context.SaveChanges();
+
+            return true;
+        }
 
         public bool MarkAsPaid(int invoiceId)
         {

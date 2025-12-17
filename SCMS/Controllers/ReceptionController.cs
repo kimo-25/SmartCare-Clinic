@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SCMS.BL.BLInterfaces;
 using SCMS.Models;
 using SCMS.ViewModels;
 
@@ -8,10 +9,12 @@ namespace SCMS.Controllers
     public class ReceptionController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly IInvoiceService _invoiceService;
 
-        public ReceptionController(AppDbContext context)
+        public ReceptionController(AppDbContext context, IInvoiceService invoiceService)
         {
             _context = context;
+            _invoiceService = invoiceService;
         }
 
         // =================== HELPERS ===================
@@ -358,6 +361,9 @@ namespace SCMS.Controllers
 
             _context.AppointmentBookings.Add(booking);
             await _context.SaveChangesAsync();
+
+            // ✅ Create invoice for this booking
+            _invoiceService.CreateForBooking(booking.BookingId);
 
             TempData["ToastSuccess"] = "✅ Patient booked successfully.";
 

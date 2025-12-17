@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SCMS.Models;
 using SCMS.ViewModels;
+using SCMS.ViewModels.Doctor;
 using System.Security.Claims;
 
 namespace SCMS.Controllers
@@ -160,7 +161,6 @@ namespace SCMS.Controllers
                 .Distinct()
                 .ToList();
 
-            // ✅ هات أحدث نتيجة أشعة لكل مريض (اللي طلبها نفس الدكتور)
             var latestResults = await _context.RadiologyResults
                 .Include(r => r.Request)
                 .Where(r => r.Request.DoctorId == doctorId && patientIds.Contains(r.Request.PatientId))
@@ -199,10 +199,7 @@ namespace SCMS.Controllers
             return View(vm);
         }
 
-
-        
-       
-
+        // ===================== ✅ CREATE PRESCRIPTION (FIXED) =====================
 
         [HttpGet]
         public IActionResult CreatePrescription(int patientId)
@@ -210,31 +207,64 @@ namespace SCMS.Controllers
             var guard = RequireDoctor();
             if (guard != null) return guard;
 
-            ViewBag.PatientId = patientId;
-            ViewBag.DoctorId = CurrentUserId();
-            return View();
+            return View(new CreatePrescriptionVm
+            {
+                PatientId = patientId
+            });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreatePrescription(Prescription vm)
+        public async Task<IActionResult> CreatePrescription(CreatePrescriptionVm vm)
         {
             var guard = RequireDoctor();
             if (guard != null) return guard;
 
-            var doctorId = CurrentUserId();
-
             if (!ModelState.IsValid)
                 return View(vm);
 
-            vm.DoctorId = doctorId;
-            vm.CreatedAt = DateTime.UtcNow;
+            var doctorId = CurrentUserId();
 
-            _context.Prescriptions.Add(vm);
+            // ✅ تأكد إن المريض موجود
+            var patientExists = await _context.Patients.AnyAsync(p => p.UserId == vm.PatientId);
+            if (!patientExists)
+            {
+                ModelState.AddModelError("", "Patient not found.");
+                return View(vm);
+            }
+
+            // ✅ 1) احفظ الروشتة
+            var prescription = new Prescription
+            {
+                PatientId = vm.PatientId,
+                DoctorId = doctorId,
+                Diagnosis = vm.Diagnosis.Trim(),
+                Treatment = vm.Treatment.Trim(),
+                RadiologyRequested = vm.RadiologyRequested,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Prescriptions.Add(prescription);
+            await _context.SaveChangesAsync(); // ✅ عشان PrescriptionId يتولد
+
+            // ✅ 2) احفظ MedicalRecord مربوط بالروشتة
+            var record = new MedicalRecord
+            {
+                PatientId = vm.PatientId,
+                PrescriptionId = prescription.PrescriptionId,
+                Description = "Prescription created",
+                RecordDate = DateTime.UtcNow
+            };
+
+            _context.MedicalRecords.Add(record);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction(nameof(Dashboard));
+            TempData["ToastSuccess"] = "✅ Prescription saved.";
+
+            return RedirectToAction(nameof(PatientFile), new { patientId = vm.PatientId });
         }
+
+        // ===================== MEDICAL RECORDS =====================
 
         public async Task<IActionResult> MedicalRecords()
         {
@@ -320,8 +350,10 @@ namespace SCMS.Controllers
 
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("MedicalRecords");
+            return RedirectToAction(nameof(MedicalRecords));
         }
+
+        // ===================== PATIENT FILE =====================
 
         public async Task<IActionResult> PatientFile(int patientId)
         {
@@ -362,6 +394,8 @@ namespace SCMS.Controllers
 
             return View(vm);
         }
+
+        // ===================== EDIT DOCTOR PROFILE =====================
 
         [HttpGet]
         public async Task<IActionResult> Edit(int? id)

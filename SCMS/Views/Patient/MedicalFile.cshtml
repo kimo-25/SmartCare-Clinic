@@ -1,0 +1,132 @@
+﻿@model SCMS.ViewModels.Patient.PatientMedicalFileVm
+<link rel="stylesheet" href="~/css/clinic.css" />
+
+<div class="page-container">
+    <div class="soft-header">
+        <h2>📋 Medical File - @Model.FullName</h2>
+    </div>
+
+    <div class="card mt-3">
+        <h3>💊 Prescriptions</h3>
+
+        @if (!Model.Prescriptions.Any())
+        {
+            <div class="alert alert-info">No prescriptions yet.</div>
+        }
+        else
+        {
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Doctor</th>
+                        <th>Diagnosis</th>
+                        <th>Treatment</th>
+                        <th>Radiology</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in Model.Prescriptions)
+                    {
+                        <tr>
+                            <td>@p.CreatedAt.ToString("dd/MM/yyyy")</td>
+                            <td>@p.DoctorName</td>
+                            <td>@p.Diagnosis</td>
+                            <td>@p.Treatment</td>
+                            <td>@(p.RadiologyRequested ? "Yes" : "No")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+
+    <div class="card mt-3">
+        <h3>🩻 Radiology Results</h3>
+
+        @if (!Model.RadiologyResults.Any())
+        {
+            <div class="alert alert-info">No radiology results yet.</div>
+        }
+        else
+        {
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Doctor</th>
+                        <th>Test</th>
+                        <th>Status</th>
+                        <th>File</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.RadiologyResults)
+                    {
+                        <tr>
+                            <td>@r.ResultDate.ToString("dd/MM/yyyy")</td>
+                            <td>@r.DoctorName</td>
+                            <td>@r.TestName</td>
+                            <td>@r.Status</td>
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(r.ImagePath))
+                                {
+                                    <a class="btn btn-sm btn-primary" href="@r.ImagePath" target="_blank">View</a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+
+    <div class="card mt-3">
+        <h3>🧾 Invoices</h3>
+
+        @if (!Model.Invoices.Any())
+        {
+            <div class="alert alert-info">No invoices yet.</div>
+        }
+        else
+        {
+            @foreach (var inv in Model.Invoices)
+            {
+                <div class="card mt-2">
+                    <div class="d-flex justify-content-between">
+                        <strong>Invoice #@inv.InvoiceId</strong>
+                        <span class="text-muted">@inv.CreatedAt.ToString("dd/MM/yyyy")</span>
+                    </div>
+
+                    <div class="text-muted">Doctor: @inv.DoctorName</div>
+
+                    <table class="table mt-2">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th style="width:160px;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var line in inv.Lines)
+                            {
+                                <tr>
+                                    <td>@line.Title</td>
+                                    <td>@line.Amount</td>
+                                </tr>
+                            }
+                            <tr>
+                                <td><strong>Total</strong></td>
+                                <td><strong>@inv.Total</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            }
+        }
+    </div>
+</div>
