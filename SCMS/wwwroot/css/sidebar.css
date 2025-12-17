@@ -71,3 +71,19 @@
 .page-container {
     padding: 20px;
 }
+/* ✅ Navbar compact override (put at END of css file) */
+.navbar {
+    padding: 8px 22px; /* كان 14px 36px */
+    min-height: 60px; /* يقلل الارتفاع */
+}
+
+    .navbar .navbar-brand {
+        font-size: 18px; /* كان 22px */
+        padding: 6px 10px; /* كان 8px 14px */
+        border-radius: 14px;
+    }
+
+    .navbar a.nav-link {
+        margin-left: 12px; /* كان 18px */
+        font-size: 14px;
+    }
